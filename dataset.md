@@ -8,7 +8,7 @@ Dataset Links:-
 
 1.Resume Analysis https://www.kaggle.com/datasets/rhythmghai/resume-screening-dataset-200k-candidates [URL 🔗](https://www.kaggle.com/datasets/rhythmghai/resume-screening-dataset-200k-candidates)
 
-2.Skill Gap Analysis https://www.kaggle.com/datasets/benjaminkongshaug/nyc-job-postings-with-esco-occupations-a nd-skills[URL 🔗](https://www.kaggle.com/datasets/benjaminkongshaug/nyc-job-postings-with-esco-occupationsaand-skills)
+2.Skill Gap Analysis https://www.kaggle.com/datasets/benjaminkongshaug/nyc-job-postings-with-esco-occupations-a nd-skills[URL 🔗](https://www.kaggle.com/datasets/benjaminkongshaug/nyc-job-postings-with-esco-occupationsa and-skills)
 
 3.Roadmap Generator https://www.kaggle.com/datasets/nitinsen001/ai-and-data-career-skills-with-proficiency [URL 🔗](https://www.kaggle.com/datasets/nitinsen001/ai-and-data-career-skills-with-proficiency)
 
