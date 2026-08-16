@@ -3,7 +3,7 @@
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100.0+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.2.0+-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org)
-[![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://ai-career-mentor-lemon.vercel.app/)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://ai-career-mentor-project.vercel.app/)
 [![Render](https://img.shields.io/badge/Render-Backend-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://ai-career-mentor-3z0j.onrender.com)
 
 **AI Career Mentor** is an advanced, production-ready **Hybrid AI & Machine Learning Career Intelligence Platform**. It combines **8 Kaggle Datasets (~1.6 Million Training Rows)** with a **5-Tier OpenRouter AI Model Fallback Chain** (`Llama 3.3 70B` ➔ `DeepSeek V3` ➔ `GPT-4o Mini` ➔ `Qwen 2.5 Coder` ➔ `Llama 3.1 8B`) to provide personalized career recommendations, salary estimations, ATS resume evaluations, mock interview answer grading, live GitHub code quality audits, and LinkedIn SEO profile reviews.
@@ -12,7 +12,7 @@
 
 ## 🌟 Live Demo Links
 
-- 🌐 **Frontend (Vercel)**: [https://ai-career-mentor-lemon.vercel.app/](https://ai-career-mentor-lemon.vercel.app/)
+- 🌐 **Frontend (Vercel)**: [https://ai-career-mentor-project.vercel.app/](https://ai-career-mentor-project.vercel.app/)
 - ⚡ **Backend API (Render)**: [https://ai-career-mentor-3z0j.onrender.com](https://ai-career-mentor-3z0j.onrender.com)
 - 📖 **Interactive API Docs (Swagger UI)**: [https://ai-career-mentor-3z0j.onrender.com/docs](https://ai-career-mentor-3z0j.onrender.com/docs)
 
