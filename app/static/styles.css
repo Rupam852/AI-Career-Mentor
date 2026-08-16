@@ -431,11 +431,17 @@ textarea.form-control {
 
 /* Mobile & Tablet Responsive Optimizations */
 @media (max-width: 900px) {
+    html, body {
+        height: auto !important;
+        min-height: 100% !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
     body {
-        flex-direction: column;
-        overflow-x: hidden;
-        height: auto;
-        min-height: 100vh;
+        flex-direction: column !important;
+        display: block !important;
     }
 
     .mobile-menu-btn {
@@ -443,15 +449,14 @@ textarea.form-control {
     }
 
     .sidebar {
-        width: 100%;
-        height: auto;
-        padding: 14px 18px;
-        position: sticky;
-        top: 0;
+        width: 100% !important;
+        height: auto !important;
+        padding: 14px 18px !important;
+        position: relative !important;
         z-index: 1000;
         background: #0b0f19;
-        border-right: none;
-        border-bottom: 1px solid var(--border-color);
+        border-right: none !important;
+        border-bottom: 1px solid var(--border-color) !important;
     }
 
     .brand {
@@ -482,8 +487,11 @@ textarea.form-control {
     }
 
     .main-container {
-        height: auto;
-        overflow-y: visible;
+        height: auto !important;
+        min-height: auto !important;
+        overflow: visible !important;
+        flex: none !important;
+        width: 100% !important;
     }
 
     .header {
@@ -503,12 +511,14 @@ textarea.form-control {
     }
 
     .content-body {
-        padding: 16px 14px;
+        height: auto !important;
+        overflow: visible !important;
+        padding: 16px 14px !important;
     }
 
     .card-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
     }
 
     .card {
