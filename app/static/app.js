@@ -511,11 +511,8 @@ function initForms() {
         const payload = {
             linkedin_url: document.getElementById('li-url').value,
             headline: document.getElementById('li-headline').value,
-            has_profile_photo: document.getElementById('li-photo').checked,
-            has_banner_image: document.getElementById('li-banner').checked,
-            summary_word_count: parseInt(document.getElementById('li-summary').value),
-            connections_count: parseInt(document.getElementById('li-connections').value),
-            skills_count: parseInt(document.getElementById('li-skills').value)
+            summary_text: document.getElementById('li-summary-text').value,
+            api_key: getApiKey()
         };
 
         const res = await fetch(`${getApiBaseUrl()}/api/linkedin-review`, {
