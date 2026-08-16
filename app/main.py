@@ -375,6 +375,9 @@ class LinkedInRequest(BaseModel):
     linkedin_url: str
     headline: Optional[str] = "Professional"
     summary_text: Optional[str] = ""
+    certifications: Optional[str] = ""
+    featured_projects: Optional[str] = ""
+    post_activity: Optional[str] = "Active"
     api_key: Optional[str] = None
 
 @app.post("/api/linkedin-review")
@@ -385,6 +388,9 @@ def review_linkedin(req: LinkedInRequest):
 
     summary_words = len(req.summary_text.split()) if req.summary_text and req.summary_text.strip() else 0
     headline_text = req.headline.strip() if req.headline and req.headline.strip() else "Professional Member"
+    certs_text = req.certifications.strip() if req.certifications and req.certifications.strip() else "None provided"
+    projects_text = req.featured_projects.strip() if req.featured_projects and req.featured_projects.strip() else "None provided"
+    activity_level = req.post_activity.strip() if req.post_activity and req.post_activity.strip() else "Active Member"
 
     # Query dataset baseline
     df = data_loader.datasets.get('linkedin')
@@ -393,31 +399,37 @@ def review_linkedin(req: LinkedInRequest):
     # Check AI LLM Audit
     if req.api_key or os.environ.get("OPENROUTER_API_KEY") or os.environ.get("GEMINI_API_KEY"):
         prompt = f"""
-        Audit the following LinkedIn Profile:
+        Audit the following Comprehensive LinkedIn Profile:
         - Profile Handle/URL: {clean_handle or req.linkedin_url}
         - Headline: "{headline_text}"
         - Summary/Bio Text ({summary_words} words): "{req.summary_text}"
+        - Certifications & Licenses: "{certs_text}"
+        - Featured Projects & Links: "{projects_text}"
+        - Post Activity & Engagement Level: "{activity_level}"
 
         Provide a JSON response with exact keys:
         - "profile_completeness_score": Integer (0-100)
         - "review_rating": String ("All-Star Profile", "Intermediate Profile", "Needs Growth")
-        - "strengths": String highlighting profile strengths (headline quality, clear positioning)
-        - "weaknesses": String highlighting major profile gaps (summary depth, visual assets)
-        - "improvement_suggestions": String with 3 actionable recommendations to attract recruiters
+        - "strengths": String highlighting profile strengths (headline quality, certifications, featured projects, activity)
+        - "weaknesses": String highlighting major profile gaps (summary depth, missing certs/projects, engagement)
+        - "improvement_suggestions": String with 3 actionable recommendations to attract top recruiters
         """
         ai_res = ai_service._call_openrouter_chain(prompt, req.api_key)
         if ai_res:
             score = ai_res.get("profile_completeness_score") or ai_res.get("profile_score") or ai_res.get("score") or 85
             rating = ai_res.get("review_rating") or ai_res.get("rating") or "All-Star Profile"
-            strengths = ai_res.get("strengths") or "Strong professional headline and clear domain positioning."
-            weaknesses = ai_res.get("weaknesses") or "Consider adding detailed project achievements and featured links."
-            tips = ai_res.get("improvement_suggestions") or ai_res.get("tips") or "Add top 10+ industry skills and ask for recommendations."
+            strengths = ai_res.get("strengths") or "Strong professional headline, solid project positioning, and clear certifications."
+            weaknesses = ai_res.get("weaknesses") or "Consider expanding featured projects and posting weekly technical insights."
+            tips = ai_res.get("improvement_suggestions") or ai_res.get("tips") or "Add top 10+ industry skills, showcase live project links, and request recommendations."
 
             return {
                 "source": "AI Profile Auditor (" + str(ai_res.get("ai_model_used", "OpenRouter AI")) + ")",
                 "linkedin_handle": clean_handle or "LinkedIn Member",
                 "headline_analyzed": headline_text,
                 "summary_words_count": summary_words,
+                "certifications_analyzed": certs_text,
+                "projects_analyzed": projects_text,
+                "activity_level": activity_level,
                 "profile_completeness_score": score,
                 "review_rating": rating,
                 "strengths": strengths,
@@ -426,7 +438,8 @@ def review_linkedin(req: LinkedInRequest):
             }
 
     # Local Dataset Fallback
-    score = min(98, max(40, int(40 + (min(len(headline_text), 40) / 40.0) * 30 + (min(summary_words, 100) / 100.0) * 28)))
+    bonus = (10 if certs_text != "None provided" else 0) + (10 if projects_text != "None provided" else 0)
+    score = min(98, max(40, int(40 + (min(len(headline_text), 40) / 40.0) * 20 + (min(summary_words, 100) / 100.0) * 20 + bonus)))
     rating = "All-Star Profile" if score >= 80 else ("Intermediate Profile" if score >= 60 else "Needs Growth")
 
     strengths = str(sample_row.get('strengths', 'Good headline structure and professional positioning.')) if sample_row is not None else "Good headline structure."
@@ -438,6 +451,9 @@ def review_linkedin(req: LinkedInRequest):
         "linkedin_handle": clean_handle or "LinkedIn Member",
         "headline_analyzed": headline_text,
         "summary_words_count": summary_words,
+        "certifications_analyzed": certs_text,
+        "projects_analyzed": projects_text,
+        "activity_level": activity_level,
         "profile_completeness_score": score,
         "review_rating": rating,
         "strengths": strengths,

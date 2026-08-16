@@ -594,6 +594,9 @@ function initForms() {
                 linkedin_url: document.getElementById('li-url').value,
                 headline: document.getElementById('li-headline').value,
                 summary_text: document.getElementById('li-summary-text').value,
+                certifications: document.getElementById('li-certs') ? document.getElementById('li-certs').value : '',
+                featured_projects: document.getElementById('li-projects') ? document.getElementById('li-projects').value : '',
+                post_activity: document.getElementById('li-activity') ? document.getElementById('li-activity').value : 'Active',
                 api_key: getApiKey()
             };
 
@@ -611,20 +614,24 @@ function initForms() {
             const tips = data.improvement_suggestions || data.tips || 'Add top technical skills and request recommendations.';
             const headline = data.headline_analyzed || document.getElementById('li-headline').value || 'Professional Member';
             const summaryWords = data.summary_words_count || 0;
+            const certs = data.certifications_analyzed || 'None provided';
+            const projects = data.projects_analyzed || 'None provided';
+            const activity = data.activity_level || 'Active Member';
 
             box.innerHTML = `
                 <div style="font-size: 11px; color: var(--accent); margin-bottom: 8px;">Evaluated via: ${data.source || 'AI Profile Auditor'}</div>
                 
-                <!-- Profile Inputs Analyzed Card -->
-                <div style="background: rgba(0,119,181,0.08); border: 1px solid rgba(0,119,181,0.25); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-                    <div style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 6px;">
-                        <i class="fa-brands fa-linkedin" style="color:#0077b5;"></i> Profile: <span style="color: var(--secondary);">@${data.linkedin_handle || 'LinkedIn Member'}</span>
+                <!-- Comprehensive Profile Inputs Card -->
+                <div style="background: rgba(0,119,181,0.08); border: 1px solid rgba(0,119,181,0.25); padding: 14px; border-radius: 8px; margin-bottom: 15px;">
+                    <div style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 8px;">
+                        <i class="fa-brands fa-linkedin" style="color:#0077b5;"></i> Audited Profile: <span style="color: var(--secondary);">@${data.linkedin_handle || 'LinkedIn Member'}</span>
                     </div>
-                    <div style="font-size: 12px; color: var(--text-bright); margin-bottom: 4px;">
-                        <strong>Headline Analyzed:</strong> "${headline}"
-                    </div>
-                    <div style="font-size: 12px; color: var(--text-muted);">
-                        <strong>Summary Bio Read:</strong> ${summaryWords} words analyzed
+                    <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; line-height: 1.5;">
+                        <div style="color: var(--text-bright);"><strong>Headline:</strong> "${headline}"</div>
+                        <div style="color: var(--text-muted);"><strong>Summary Read:</strong> ${summaryWords} words</div>
+                        <div style="color: #fcd34d;"><strong><i class="fa-solid fa-certificate"></i> Certifications:</strong> ${certs}</div>
+                        <div style="color: #67e8f9;"><strong><i class="fa-solid fa-diagram-project"></i> Featured Projects:</strong> ${projects}</div>
+                        <div style="color: #a5b4fc;"><strong><i class="fa-solid fa-newspaper"></i> Activity Level:</strong> ${activity}</div>
                     </div>
                 </div>
 
