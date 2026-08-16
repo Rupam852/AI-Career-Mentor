@@ -55,11 +55,88 @@
 
             <!-- 0. OVERVIEW TAB -->
             <div class="tab-pane active" id="tab-overview">
+                <!-- AI Engine Status Banner -->
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 20px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;">
+                    <div>
+                        <div style="font-size: 14px; font-weight: 700; color: #6ee7b7;"><i class="fa-solid fa-circle" style="color: #10b981; font-size: 10px; margin-right: 6px;"></i> AI & Machine Learning Command Center Online</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">5-Tier OpenRouter AI Fallback Chain + 1.6M Dataset Scikit-Learn Engines Active</div>
+                    </div>
+                    <div class="tag-list" style="margin-top:0;">
+                        <span class="tag" style="background: rgba(99,102,241,0.2); color:#a5b4fc;">Llama 3.3 70B</span>
+                        <span class="tag" style="background: rgba(6,182,212,0.2); color:#67e8f9;">DeepSeek V3</span>
+                        <span class="tag" style="background: rgba(245,158,11,0.2); color:#fcd34d;">GPT-4o Mini</span>
+                        <span class="tag" style="background: rgba(16,185,129,0.2); color:#6ee7b7;">Qwen 2.5 Coder</span>
+                    </div>
+                </div>
+
+                <!-- Metrics Grid -->
+                <div class="card-grid" style="margin-bottom: 20px;">
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-fire" style="color: var(--warning);"></i> Top High-Paying Roles (INR & USD)</div>
+                        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: rgba(255,255,255,0.02); border-radius: 8px;">
+                                <div><strong style="color:#fff; font-size: 13px;">AI / ML Architect</strong><div style="font-size:11px; color:var(--text-muted);">Deep Learning & GenAI</div></div>
+                                <div style="text-align:right;"><span style="color:#6ee7b7; font-weight:700; font-size:14px;">₹34.5 - ₹58.0 L</span><div style="font-size:11px; color:var(--secondary);">$42k - $70k/yr</div></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: rgba(255,255,255,0.02); border-radius: 8px;">
+                                <div><strong style="color:#fff; font-size: 13px;">MLOps Engineer</strong><div style="font-size:11px; color:var(--text-muted);">Docker, Kubernetes, CI/CD</div></div>
+                                <div style="text-align:right;"><span style="color:#6ee7b7; font-weight:700; font-size:14px;">₹24.0 - ₹42.0 L</span><div style="font-size:11px; color:var(--secondary);">$29k - $51k/yr</div></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: rgba(255,255,255,0.02); border-radius: 8px;">
+                                <div><strong style="color:#fff; font-size: 13px;">Full Stack Engineer</strong><div style="font-size:11px; color:var(--text-muted);">FastAPI, React, Cloud APIs</div></div>
+                                <div style="text-align:right;"><span style="color:#6ee7b7; font-weight:700; font-size:14px;">₹20.0 - ₹36.0 L</span><div style="font-size:11px; color:var(--secondary);">$24k - $44k/yr</div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-chart-line" style="color: var(--secondary);"></i> Trending Tech Skills (2026 Demand)</div>
+                        <div class="tag-list" style="margin-top: 10px; gap: 10px;">
+                            <span class="tag" style="padding: 6px 12px; font-size: 13px;"><i class="fa-solid fa-arrow-trend-up" style="color:#6ee7b7;"></i> Python 3.12 (+48%)</span>
+                            <span class="tag" style="padding: 6px 12px; font-size: 13px;"><i class="fa-solid fa-arrow-trend-up" style="color:#6ee7b7;"></i> FastAPI & REST (+42%)</span>
+                            <span class="tag" style="padding: 6px 12px; font-size: 13px;"><i class="fa-solid fa-arrow-trend-up" style="color:#6ee7b7;"></i> PyTorch & LLMs (+55%)</span>
+                            <span class="tag" style="padding: 6px 12px; font-size: 13px;"><i class="fa-solid fa-arrow-trend-up" style="color:#6ee7b7;"></i> Docker & Cloud (+36%)</span>
+                            <span class="tag" style="padding: 6px 12px; font-size: 13px;"><i class="fa-solid fa-arrow-trend-up" style="color:#6ee7b7;"></i> React & Next.js (+34%)</span>
+                            <span class="tag" style="padding: 6px 12px; font-size: 13px;"><i class="fa-solid fa-arrow-trend-up" style="color:#6ee7b7;"></i> SQL & BigQuery (+29%)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Launchpad Shortcuts -->
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color:#fff; margin-bottom: 12px;"><i class="fa-solid fa-rocket" style="color: var(--accent);"></i> Quick Launchpad Tools</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+                        <div class="card" style="cursor: pointer; transition: transform 0.2s;" onclick="document.querySelector('[data-tab=resume]').click();">
+                            <div style="font-size: 24px; color: var(--primary); margin-bottom: 8px;"><i class="fa-solid fa-file-invoice"></i></div>
+                            <h4 style="color:#fff; font-size: 14px;">Resume ATS & Upload</h4>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Parse PDF/DOCX resumes and get instant ATS evaluation.</p>
+                        </div>
+
+                        <div class="card" style="cursor: pointer; transition: transform 0.2s;" onclick="document.querySelector('[data-tab=interview]').click();">
+                            <div style="font-size: 24px; color: var(--secondary); margin-bottom: 8px;"><i class="fa-solid fa-comments"></i></div>
+                            <h4 style="color:#fff; font-size: 14px;">AI Mock Interview</h4>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Practice interview questions and get scored out of 10.</p>
+                        </div>
+
+                        <div class="card" style="cursor: pointer; transition: transform 0.2s;" onclick="document.querySelector('[data-tab=github]').click();">
+                            <div style="font-size: 24px; color: var(--accent); margin-bottom: 8px;"><i class="fa-brands fa-github"></i></div>
+                            <h4 style="color:#fff; font-size: 14px;">Live GitHub Audit</h4>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Audit repositories, code quality grade, and developer tier.</p>
+                        </div>
+
+                        <div class="card" style="cursor: pointer; transition: transform 0.2s;" onclick="document.querySelector('[data-tab=roadmap]').click();">
+                            <div style="font-size: 24px; color: var(--warning); margin-bottom: 8px;"><i class="fa-solid fa-route"></i></div>
+                            <h4 style="color:#fff; font-size: 14px;">Career Roadmap</h4>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Get multi-phase learning roadmaps, courses, and project ideas.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card-grid">
                     <div class="card">
                         <div class="card-title"><i class="fa-solid fa-layer-group"></i> Dataset & AI Knowledge Hub</div>
-                        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">
-                            Integrates 8 specialized machine learning datasets with optional Gemini AI evaluation to analyze Resumes, PDF uploads, GitHub profiles, and practice live AI Mock Interviews!
+                        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">
+                            Integrates 8 specialized machine learning datasets with optional OpenRouter AI evaluation to analyze Resumes, PDF uploads, GitHub profiles, and practice live AI Mock Interviews!
                         </p>
                         <div class="tag-list">
                             <span class="tag"><i class="fa-solid fa-check"></i> PDF / DOCX Resume Upload</span>
@@ -67,12 +144,12 @@
                             <span class="tag"><i class="fa-solid fa-check"></i> AI Interview Answer Scoring</span>
                             <span class="tag"><i class="fa-solid fa-check"></i> INR Lakhs Salary Predictor</span>
                             <span class="tag"><i class="fa-solid fa-check"></i> 1.6M ML Dataset Engine</span>
-                            <span class="tag"><i class="fa-solid fa-check"></i> Gemini AI Support</span>
+                            <span class="tag"><i class="fa-solid fa-check"></i> OpenRouter AI Support</span>
                         </div>
                     </div>
 
                     <div class="card">
-                        <div class="card-title"><i class="fa-solid fa-chart-pie"></i> Salary & Industry Insights</div>
+                        <div class="card-title"><i class="fa-solid fa-chart-pie"></i> Industry Salary Benchmarks</div>
                         <canvas id="overviewChart" style="max-height: 220px;"></canvas>
                     </div>
                 </div>
