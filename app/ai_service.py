@@ -105,4 +105,29 @@ class AIService:
         """
         return self._call_openrouter_chain(prompt, api_key)
 
+    def generate_ai_roadmap(self, current_role: str, target_role: str, weekly_hours: int, dataset_baseline: dict = None, api_key: str = None):
+        prompt = f"""
+        You are a Principal Career Architect and Tech Mentor. Generate a highly comprehensive, step-by-step learning and career transition roadmap.
+
+        Candidate Transition:
+        - Current Role: "{current_role}"
+        - Target Goal Role: "{target_role}"
+        - Weekly Commitment: {weekly_hours} hours/week
+        - Baseline Industry Focus: "{dataset_baseline.get('focus_skills', 'Core Technical Skills') if dataset_baseline else 'Technical Skills'}"
+
+        Provide a JSON response with exact keys:
+        - "total_duration_months": Integer (calculated based on transition gap & weekly hours)
+        - "target_certification": String (Top recognized industry certification)
+        - "difficulty_level": String ("Beginner Friendly", "Moderate", "Challenging / Advanced")
+        - "phases": List of 4 distinct Phase objects, each having:
+            - "phase_name": String (e.g. "Phase 1: Fundamentals & Tooling (Months 1-2)")
+            - "description": String (High level goal of this phase)
+            - "key_skills": List of strings (4-5 skills)
+            - "recommended_resources": String (Specific top courses, books, documentation)
+            - "project_idea": String (Specific portfolio project to build during this phase)
+        - "milestones": List of 3-4 milestone strings (e.g. "Month 2: Complete Core Python & SQL Portfolio Project")
+        - "career_tips": String (2-3 expert tips to crack interviews for this target role)
+        """
+        return self._call_openrouter_chain(prompt, api_key)
+
 ai_service = AIService()

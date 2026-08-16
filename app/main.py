@@ -140,6 +140,7 @@ class RoadmapRequest(BaseModel):
     current_role: str
     target_role: str
     weekly_hours: Optional[int] = 10
+    api_key: Optional[str] = None
 
 @app.post("/api/roadmap")
 def generate_roadmap(req: RoadmapRequest):
@@ -150,36 +151,57 @@ def generate_roadmap(req: RoadmapRequest):
         if not matches.empty:
             matched_row = matches.iloc[0]
 
+    baseline = {}
     if matched_row is not None:
-        steps_raw = str(matched_row.get('roadmap_steps', ''))
-        milestones_raw = str(matched_row.get('milestones', ''))
-        total_months = int(matched_row.get('total_duration_months', 6))
-        phases_count = int(matched_row.get('number_of_phases', 4))
-        focus = str(matched_row.get('focus_skills', 'Core Technical Skills'))
-        cert = str(matched_row.get('target_certification', 'Industry Certified Professional'))
-        diff = str(matched_row.get('difficulty_level', 'Moderate'))
+        baseline["total_months"] = int(matched_row.get('total_duration_months', 6))
+        baseline["focus_skills"] = str(matched_row.get('focus_skills', 'Core Technical Skills'))
+        baseline["target_certification"] = str(matched_row.get('target_certification', 'Certified Professional'))
+        baseline["difficulty_level"] = str(matched_row.get('difficulty_level', 'Moderate'))
+        baseline["steps_raw"] = str(matched_row.get('roadmap_steps', ''))
+        baseline["milestones_raw"] = str(matched_row.get('milestones', ''))
     else:
-        total_months = 6
-        phases_count = 4
-        focus = "Core Domain Skills, Project Execution, System Design"
-        cert = "Professional Certification"
-        diff = "Moderate"
-        steps_raw = "Phase 1 (1.5 mo): Fundamentals & Tooling | Phase 2 (1.5 mo): Advanced Core Practice | Phase 3 (1.5 mo): Real World Projects | Phase 4 (1.5 mo): Career Portfolio & Applications"
-        milestones_raw = "Month 2: Complete Basics | Month 4: Portfolio Project Published | Month 6: Target Role Ready"
+        baseline["total_months"] = 6
+        baseline["focus_skills"] = "Core Domain Skills, Project Execution, System Architecture"
+        baseline["target_certification"] = "Professional Industry Certification"
+        baseline["difficulty_level"] = "Moderate"
+        baseline["steps_raw"] = "Phase 1 (1.5 mo): Fundamentals & Tooling | Phase 2 (1.5 mo): Core Mastery | Phase 3 (1.5 mo): Real Projects | Phase 4 (1.5 mo): Interview Prep"
+        baseline["milestones_raw"] = "Month 2: Complete Core Concepts | Month 4: Portfolio Project Live | Month 6: Job Ready"
 
-    steps = [s.strip() for s in steps_raw.split('|') if s.strip()]
-    milestones = [m.strip() for m in milestones_raw.split('|') if m.strip()]
+    # Call AI Model with Dataset Baseline
+    if req.api_key or os.environ.get("OPENROUTER_API_KEY") or os.environ.get("GEMINI_API_KEY"):
+        ai_res = ai_service.generate_ai_roadmap(req.current_role, req.target_role, req.weekly_hours, baseline, req.api_key)
+        if ai_res:
+            ai_res["source"] = "Dataset + AI Career Architect"
+            ai_res["current_role"] = req.current_role
+            ai_res["target_role"] = req.target_role
+            ai_res["weekly_hours"] = req.weekly_hours
+            return ai_res
+
+    # Fallback to Dataset Engine
+    steps = [s.strip() for s in baseline["steps_raw"].split('|') if s.strip()]
+    milestones = [m.strip() for m in baseline["milestones_raw"].split('|') if m.strip()]
+
+    formatted_phases = []
+    for idx, s in enumerate(steps):
+        formatted_phases.append({
+            "phase_name": f"Phase {idx+1}: {s.split(':')[0] if ':' in s else 'Module ' + str(idx+1)}",
+            "description": s,
+            "key_skills": [sk.strip() for sk in baseline["focus_skills"].split(',')[:4]],
+            "recommended_resources": "Coursera, Udemy & Official Documentation",
+            "project_idea": f"Build a hands-on portfolio project for {req.target_role}"
+        })
 
     return {
+        "source": "Dataset ML Baseline",
+        "current_role": req.current_role,
         "target_role": req.target_role,
-        "total_duration_months": total_months,
-        "weekly_hours_commitment": req.weekly_hours,
-        "number_of_phases": phases_count,
-        "focus_skills": focus,
-        "target_certification": cert,
-        "difficulty_level": diff,
-        "roadmap_steps": steps,
-        "milestones": milestones
+        "weekly_hours": req.weekly_hours,
+        "total_duration_months": baseline["total_months"],
+        "target_certification": baseline["target_certification"],
+        "difficulty_level": baseline["difficulty_level"],
+        "phases": formatted_phases,
+        "milestones": milestones,
+        "career_tips": "Dedicate consistent weekly study hours and build at least 2 public GitHub projects."
     }
 
 # --- 5. Resume Analysis & PDF/DOCX Upload Endpoint ---

@@ -337,7 +337,8 @@ function initForms() {
         const payload = {
             current_role: document.getElementById('rm-current').value,
             target_role: document.getElementById('rm-target').value,
-            weekly_hours: parseInt(document.getElementById('rm-hours').value)
+            weekly_hours: parseInt(document.getElementById('rm-hours').value),
+            api_key: getApiKey()
         };
 
         const res = await fetch(`${getApiBaseUrl()}/api/roadmap`, {
@@ -349,18 +350,62 @@ function initForms() {
 
         const box = document.getElementById('roadmap-result');
         box.style.display = 'block';
-        box.innerHTML = `
-            <div style="margin-bottom: 15px;">
-                <span class="tag" style="background: rgba(99, 102, 241, 0.2); color: #a5b4fc;">Total Duration: ${data.total_duration_months} Months</span>
-                <span class="tag" style="background: rgba(6, 182, 212, 0.2); color: #67e8f9;">Certification: ${data.target_certification}</span>
-            </div>
-            <div style="margin-top: 15px;">
-                ${data.roadmap_steps.map(step => `
-                    <div class="timeline-step">
-                        <div style="font-size: 14px; font-weight: 600; color: #fff;">${step}</div>
+
+        const phasesHtml = (data.phases || []).map((p, idx) => `
+            <div class="timeline-step" style="background: rgba(255,255,255,0.02); padding: 14px; border-radius: 8px; margin-bottom: 16px;">
+                <div style="font-size: 15px; font-weight: 700; color: var(--secondary);">${p.phase_name || 'Phase ' + (idx+1)}</div>
+                <div style="font-size: 13px; color: var(--text-muted); margin: 6px 0;">${p.description || ''}</div>
+                
+                ${p.key_skills ? `
+                    <div style="margin: 8px 0;">
+                        <span style="font-size: 11px; color: var(--text-muted);">Skills:</span>
+                        <div class="tag-list" style="margin-top: 4px;">
+                            ${(p.key_skills || []).map(sk => `<span class="tag">${sk}</span>`).join('')}
+                        </div>
                     </div>
-                `).join('')}
+                ` : ''}
+
+                ${p.recommended_resources ? `
+                    <div style="font-size: 12px; color: var(--accent); margin-top: 6px;">
+                        <i class="fa-solid fa-book-open"></i> <strong>Resources:</strong> ${p.recommended_resources}
+                    </div>
+                ` : ''}
+
+                ${p.project_idea ? `
+                    <div style="font-size: 12px; color: #a5b4fc; background: rgba(99,102,241,0.1); padding: 8px; border-radius: 6px; margin-top: 8px;">
+                        <i class="fa-solid fa-laptop-code"></i> <strong>Portfolio Project:</strong> ${p.project_idea}
+                    </div>
+                ` : ''}
             </div>
+        `).join('');
+
+        const milestonesHtml = (data.milestones || []).map(m => `
+            <li style="font-size: 12px; color: var(--text-bright); margin-bottom: 4px;"><i class="fa-solid fa-flag-checkered" style="color: var(--warning);"></i> ${m}</li>
+        `).join('');
+
+        box.innerHTML = `
+            <div style="font-size: 11px; color: var(--accent); margin-bottom: 8px;">Generated via: ${data.source || 'AI Mentor'}</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
+                <span class="tag" style="background: rgba(99, 102, 241, 0.2); color: #a5b4fc; font-size: 13px;"><i class="fa-solid fa-clock"></i> Duration: ${data.total_duration_months} Months</span>
+                <span class="tag" style="background: rgba(6, 182, 212, 0.2); color: #67e8f9; font-size: 13px;"><i class="fa-solid fa-certificate"></i> Certification: ${data.target_certification}</span>
+                <span class="tag" style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; font-size: 13px;"><i class="fa-solid fa-signal"></i> Level: ${data.difficulty_level}</span>
+            </div>
+            
+            <h4 style="color: #fff; margin-bottom: 12px;"><i class="fa-solid fa-route"></i> Actionable Learning Phases</h4>
+            ${phasesHtml}
+
+            ${milestonesHtml ? `
+                <div style="margin-top: 16px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                    <h5 style="color: var(--warning); font-size: 13px; margin-bottom: 8px;">Key Target Milestones:</h5>
+                    <ul style="list-style: none;">${milestonesHtml}</ul>
+                </div>
+            ` : ''}
+
+            ${data.career_tips ? `
+                <div style="margin-top: 12px; font-size: 12px; color: var(--text-muted); border-left: 3px solid var(--secondary); padding-left: 10px;">
+                    <strong>Mentor Career Advice:</strong> ${data.career_tips}
+                </div>
+            ` : ''}
         `;
     });
 
