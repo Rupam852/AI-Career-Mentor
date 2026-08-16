@@ -52,8 +52,12 @@ def fetch_github_profile_data(username_or_url: str):
     
     try:
         user_res = requests.get(user_url, headers=headers, timeout=6)
-        if user_res.status_code != 200:
-            return {"error": f"GitHub user '{clean_username}' not found or API rate limited."}
+        if user_res.status_code == 404:
+            return {"error": f"GitHub profile '@{clean_username}' was not found. Please check username spelling."}
+        elif user_res.status_code == 403:
+            return {"error": f"GitHub API rate limit reached for public IP. Please wait 2-3 minutes and try again."}
+        elif user_res.status_code != 200:
+            return {"error": f"GitHub service temporary delay. Please try again in 1-2 minutes."}
         
         user_data = user_res.json()
         
