@@ -464,6 +464,7 @@ function initForms() {
     document.getElementById('linkedin-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const payload = {
+            linkedin_url: document.getElementById('li-url').value,
             headline: document.getElementById('li-headline').value,
             has_profile_photo: document.getElementById('li-photo').checked,
             has_banner_image: document.getElementById('li-banner').checked,

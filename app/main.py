@@ -339,15 +339,44 @@ def review_github_live(req: GitHubLiveRequest):
 
 # --- 8. LinkedIn Review Endpoint ---
 class LinkedInRequest(BaseModel):
+    linkedin_url: Optional[str] = ""
     headline: str
     has_profile_photo: bool
     has_banner_image: bool
     summary_word_count: int
     connections_count: int
     skills_count: int
+    api_key: Optional[str] = None
 
 @app.post("/api/linkedin-review")
 def review_linkedin(req: LinkedInRequest):
+    # Parse username from URL if provided
+    clean_handle = req.linkedin_url.strip().rstrip('/')
+    if 'linkedin.com/in/' in clean_handle:
+        clean_handle = clean_handle.split('linkedin.com/in/')[-1].split('/')[0]
+
+    # Check AI LLM Review
+    if req.api_key or os.environ.get("OPENROUTER_API_KEY") or os.environ.get("GEMINI_API_KEY"):
+        prompt = f"""
+        Audit the following LinkedIn Profile:
+        - Profile Handle/URL: {clean_handle or req.linkedin_url}
+        - Headline: "{req.headline}"
+        - Has Photo: {req.has_profile_photo}, Has Banner: {req.has_banner_image}
+        - Summary Word Count: {req.summary_word_count}
+        - Connections: {req.connections_count}, Skills Count: {req.skills_count}
+
+        Provide a JSON response with exact keys:
+        - "profile_completeness_score": Integer (0-100)
+        - "review_rating": String ("All-Star", "Intermediate", "Needs Improvement")
+        - "strengths": String highlighting profile strengths
+        - "weaknesses": String highlighting major profile gaps
+        - "improvement_suggestions": String with actionable profile enhancement tips
+        """
+        ai_res = ai_service._call_openrouter_chain(prompt, req.api_key)
+        if ai_res:
+            ai_res["source"] = "AI Profile Reviewer"
+            ai_res["linkedin_handle"] = clean_handle or "LinkedIn Member"
+            return ai_res
     score = 0
     if req.has_profile_photo: score += 20
     if req.has_banner_image: score += 15
