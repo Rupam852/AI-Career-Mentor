@@ -609,10 +609,25 @@ function initForms() {
             const strengths = data.strengths || 'Good professional headline structure and clear domain positioning.';
             const weaknesses = data.weaknesses || 'Consider adding a 3-5 sentence About section and project links.';
             const tips = data.improvement_suggestions || data.tips || 'Add top technical skills and request recommendations.';
+            const headline = data.headline_analyzed || document.getElementById('li-headline').value || 'Professional Member';
+            const summaryWords = data.summary_words_count || 0;
 
             box.innerHTML = `
                 <div style="font-size: 11px; color: var(--accent); margin-bottom: 8px;">Evaluated via: ${data.source || 'AI Profile Auditor'}</div>
-                <div style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 12px;"><i class="fa-brands fa-linkedin" style="color:#0077b5;"></i> Profile: ${data.linkedin_handle || 'LinkedIn Member'}</div>
+                
+                <!-- Profile Inputs Analyzed Card -->
+                <div style="background: rgba(0,119,181,0.08); border: 1px solid rgba(0,119,181,0.25); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                    <div style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 6px;">
+                        <i class="fa-brands fa-linkedin" style="color:#0077b5;"></i> Profile: <span style="color: var(--secondary);">@${data.linkedin_handle || 'LinkedIn Member'}</span>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-bright); margin-bottom: 4px;">
+                        <strong>Headline Analyzed:</strong> "${headline}"
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted);">
+                        <strong>Summary Bio Read:</strong> ${summaryWords} words analyzed
+                    </div>
+                </div>
+
                 <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 15px;">
                     <div>
                         <div style="font-size: 12px; color: var(--text-muted);">Completeness Score</div>

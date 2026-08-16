@@ -383,6 +383,9 @@ def review_linkedin(req: LinkedInRequest):
     if 'linkedin.com/in/' in clean_handle:
         clean_handle = clean_handle.split('linkedin.com/in/')[-1].split('/')[0]
 
+    summary_words = len(req.summary_text.split()) if req.summary_text and req.summary_text.strip() else 0
+    headline_text = req.headline.strip() if req.headline and req.headline.strip() else "Professional Member"
+
     # Query dataset baseline
     df = data_loader.datasets.get('linkedin')
     sample_row = df.iloc[0] if df is not None and not df.empty else None
@@ -392,8 +395,8 @@ def review_linkedin(req: LinkedInRequest):
         prompt = f"""
         Audit the following LinkedIn Profile:
         - Profile Handle/URL: {clean_handle or req.linkedin_url}
-        - Headline: "{req.headline}"
-        - Summary/Bio Text: "{req.summary_text}"
+        - Headline: "{headline_text}"
+        - Summary/Bio Text ({summary_words} words): "{req.summary_text}"
 
         Provide a JSON response with exact keys:
         - "profile_completeness_score": Integer (0-100)
@@ -413,6 +416,8 @@ def review_linkedin(req: LinkedInRequest):
             return {
                 "source": "AI Profile Auditor (" + str(ai_res.get("ai_model_used", "OpenRouter AI")) + ")",
                 "linkedin_handle": clean_handle or "LinkedIn Member",
+                "headline_analyzed": headline_text,
+                "summary_words_count": summary_words,
                 "profile_completeness_score": score,
                 "review_rating": rating,
                 "strengths": strengths,
@@ -421,10 +426,7 @@ def review_linkedin(req: LinkedInRequest):
             }
 
     # Local Dataset Fallback
-    summary_len = len(req.summary_text.split()) if req.summary_text else 30
-    headline_len = len(req.headline) if req.headline else 15
-    
-    score = min(98, max(40, int(40 + (min(headline_len, 40) / 40.0) * 30 + (min(summary_len, 100) / 100.0) * 28)))
+    score = min(98, max(40, int(40 + (min(len(headline_text), 40) / 40.0) * 30 + (min(summary_words, 100) / 100.0) * 28)))
     rating = "All-Star Profile" if score >= 80 else ("Intermediate Profile" if score >= 60 else "Needs Growth")
 
     strengths = str(sample_row.get('strengths', 'Good headline structure and professional positioning.')) if sample_row is not None else "Good headline structure."
@@ -434,6 +436,8 @@ def review_linkedin(req: LinkedInRequest):
     return {
         "source": "Dataset Profile Auditor",
         "linkedin_handle": clean_handle or "LinkedIn Member",
+        "headline_analyzed": headline_text,
+        "summary_words_count": summary_words,
         "profile_completeness_score": score,
         "review_rating": rating,
         "strengths": strengths,
