@@ -435,7 +435,12 @@ def review_github_live(req: GitHubLiveRequest):
     }
 
 import urllib.request
-from bs4 import BeautifulSoup
+import re
+
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    BeautifulSoup = None
 
 def fetch_linkedin_public_data(linkedin_url: str):
     """
@@ -458,15 +463,24 @@ def fetch_linkedin_public_data(linkedin_url: str):
         req = urllib.request.Request(clean_url, headers=headers)
         with urllib.request.urlopen(req, timeout=5) as response:
             html = response.read().decode('utf-8', errors='ignore')
-            soup = BeautifulSoup(html, 'html.parser')
 
-            og_title = soup.find('meta', property='og:title') or soup.find('meta', attrs={'name': 'title'})
-            og_desc = soup.find('meta', property='og:description') or soup.find('meta', attrs={'name': 'description'})
-            og_img = soup.find('meta', property='og:image')
+            if BeautifulSoup is not None:
+                soup = BeautifulSoup(html, 'html.parser')
+                og_title = soup.find('meta', property='og:title') or soup.find('meta', attrs={'name': 'title'})
+                og_desc = soup.find('meta', property='og:description') or soup.find('meta', attrs={'name': 'description'})
+                og_img = soup.find('meta', property='og:image')
 
-            title_val = og_title['content'].strip() if og_title and og_title.get('content') else None
-            desc_val = og_desc['content'].strip() if og_desc and og_desc.get('content') else None
-            img_val = og_img['content'].strip() if og_img and og_img.get('content') else None
+                title_val = og_title['content'].strip() if og_title and og_title.get('content') else None
+                desc_val = og_desc['content'].strip() if og_desc and og_desc.get('content') else None
+                img_val = og_img['content'].strip() if og_img and og_img.get('content') else None
+            else:
+                title_m = re.search(r'<meta[^>]*property=["\']og:title["\'][^>]*content=["\']([^"\']+)["\']', html, re.I)
+                desc_m = re.search(r'<meta[^>]*property=["\']og:description["\'][^>]*content=["\']([^"\']+)["\']', html, re.I)
+                img_m = re.search(r'<meta[^>]*property=["\']og:image["\'][^>]*content=["\']([^"\']+)["\']', html, re.I)
+
+                title_val = title_m.group(1).strip() if title_m else None
+                desc_val = desc_m.group(1).strip() if desc_m else None
+                img_val = img_m.group(1).strip() if img_m else None
 
             name = None
             headline = None
@@ -474,7 +488,7 @@ def fetch_linkedin_public_data(linkedin_url: str):
                 parts = title_val.split(' - ')
                 name = parts[0].strip()
                 if len(parts) > 1:
-                    headline = parts[1].replace(' | LinkedIn', '').replace(' | LinkedIn', '').replace('LinkedIn', '').strip()
+                    headline = parts[1].replace(' | LinkedIn', '').replace('LinkedIn', '').strip()
 
             return {
                 "success": True,
