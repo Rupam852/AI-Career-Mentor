@@ -412,11 +412,119 @@ textarea.form-control {
     background: var(--primary);
 }
 
-/* Responsive */
+/* Mobile Menu Button */
+.mobile-menu-btn {
+    display: none;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: #fff;
+    font-size: 18px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.mobile-menu-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* Mobile & Tablet Responsive Optimizations */
 @media (max-width: 900px) {
-    body { flex-direction: column; }
-    .sidebar { width: 100%; height: auto; }
-    .card-grid { grid-template-columns: 1fr; }
+    body {
+        flex-direction: column;
+        overflow-x: hidden;
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .mobile-menu-btn {
+        display: block;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        padding: 14px 18px;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background: #0b0f19;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .brand {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .nav-menu {
+        display: none;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 14px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-menu.mobile-open {
+        display: flex;
+    }
+
+    .nav-item {
+        padding: 12px 14px;
+        font-size: 14px;
+        border-radius: var(--radius-sm);
+    }
+
+    .main-container {
+        height: auto;
+        overflow-y: visible;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px 18px;
+    }
+
+    .header-title h2 {
+        font-size: 20px;
+    }
+
+    .stats-bar {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .content-body {
+        padding: 16px 14px;
+    }
+
+    .card-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .card {
+        padding: 16px;
+    }
+
+    .btn-primary {
+        width: 100%;
+        padding: 14px 18px;
+        font-size: 14px;
+        justify-content: center;
+    }
+
+    .score-badge {
+        font-size: 24px !important;
+    }
 }
 
 /* Loading State & Button Spinner */

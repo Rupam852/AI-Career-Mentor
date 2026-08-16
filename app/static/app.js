@@ -36,11 +36,19 @@ function initApiKeyHandling() {
     }
 }
 
-// Navigation Handling
+// Navigation & Mobile Menu Handling
 function initNavigation() {
     const navItems = document.querySelectorAll('.nav-item');
     const tabPanes = document.querySelectorAll('.tab-pane');
     const headerText = document.getElementById('header-text');
+    const mobileToggleBtn = document.getElementById('mobile-toggle-btn');
+    const navMenu = document.querySelector('.nav-menu');
+
+    if (mobileToggleBtn && navMenu) {
+        mobileToggleBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('mobile-open');
+        });
+    }
 
     navItems.forEach(item => {
         item.addEventListener('click', () => {
@@ -51,6 +59,10 @@ function initNavigation() {
             const tabId = item.getAttribute('data-tab');
             document.getElementById(`tab-${tabId}`).classList.add('active');
             headerText.innerText = item.innerText.trim();
+
+            if (navMenu && navMenu.classList.contains('mobile-open')) {
+                navMenu.classList.remove('mobile-open');
+            }
         });
     });
 }
