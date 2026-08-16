@@ -380,31 +380,40 @@
                                 <label><i class="fa-brands fa-linkedin" style="color:#0077b5;"></i> LinkedIn Profile URL or Handle</label>
                                 <input type="text" class="form-control" id="li-url" placeholder="e.g. https://linkedin.com/in/username or username">
                             </div>
-                            <div class="form-group">
-                                <label>Profile Headline Text</label>
-                                <input type="text" class="form-control" id="li-headline" placeholder="e.g. AI Research Engineer | Full Stack Developer">
-                            </div>
-                            <div class="form-group">
-                                <label>About / Summary Bio Text</label>
-                                <textarea class="form-control" id="li-summary-text" rows="3" placeholder="Paste your LinkedIn summary or bio here..."></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label><i class="fa-solid fa-certificate" style="color: var(--warning);"></i> Certifications & Licenses (Optional)</label>
-                                <input type="text" class="form-control" id="li-certs" placeholder="e.g. AWS Certified Developer, Coursera ML, Google Cloud">
-                            </div>
-                            <div class="form-group">
-                                <label><i class="fa-solid fa-diagram-project" style="color: var(--accent);"></i> Featured Projects & Links (Optional)</label>
-                                <input type="text" class="form-control" id="li-projects" placeholder="e.g. AI Career Mentor, Portfolio Website, GitHub Link">
-                            </div>
-                            <div class="form-group">
-                                <label><i class="fa-solid fa-newspaper" style="color: var(--secondary);"></i> Post Activity & Engagement</label>
-                                <select class="form-control" id="li-activity">
-                                    <option value="Active (Weekly Tech Posts)">Active Tech Poster (Weekly updates & articles)</option>
-                                    <option value="Occasional (Monthly Shares)">Occasional Contributor (Monthly posts/shares)</option>
-                                    <option value="Passive (Profile Only)">Passive Member (Profile updates only)</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, #0077b5, var(--primary));"><i class="fa-brands fa-linkedin"></i> Audit Full LinkedIn Profile with AI</button>
+
+                            <details style="margin-bottom: 16px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                                <summary style="font-size: 13px; color: var(--secondary); cursor: pointer; font-weight: 600;">
+                                    <i class="fa-solid fa-sliders"></i> Optional: Customize Headline, Certifications & Projects for Deeper AI Audit
+                                </summary>
+                                <div style="margin-top: 12px;">
+                                    <div class="form-group">
+                                        <label>Profile Headline Text</label>
+                                        <input type="text" class="form-control" id="li-headline" placeholder="e.g. AI Research Engineer | Full Stack Developer">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>About / Summary Bio Text</label>
+                                        <textarea class="form-control" id="li-summary-text" rows="3" placeholder="Paste your LinkedIn summary or bio here..."></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fa-solid fa-certificate" style="color: var(--warning);"></i> Certifications & Licenses</label>
+                                        <input type="text" class="form-control" id="li-certs" placeholder="e.g. AWS Certified Developer, Coursera ML, Google Cloud">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fa-solid fa-diagram-project" style="color: var(--accent);"></i> Featured Projects & Links</label>
+                                        <input type="text" class="form-control" id="li-projects" placeholder="e.g. AI Career Mentor, Portfolio Website, GitHub Link">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fa-solid fa-newspaper" style="color: var(--secondary);"></i> Post Activity & Engagement</label>
+                                        <select class="form-control" id="li-activity">
+                                            <option value="Active (Weekly Tech Posts)">Active Tech Poster (Weekly updates & articles)</option>
+                                            <option value="Occasional (Monthly Shares)">Occasional Contributor (Monthly posts/shares)</option>
+                                            <option value="Passive (Profile Only)">Passive Member (Profile updates only)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </details>
+
+                            <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, #0077b5, var(--primary));"><i class="fa-brands fa-linkedin"></i> Audit LinkedIn Profile with AI</button>
                         </form>
                     </div>
 
