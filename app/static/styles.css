@@ -25,11 +25,37 @@
     --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.2);
 }
 
+/* Custom Ultra-Premium Neon Gradient Scrollbar */
+::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+::-webkit-scrollbar-track {
+    background: #080c14;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #6366f1 0%, #06b6d4 100%);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #06b6d4 0%, #10b981 100%);
+}
+
+::-webkit-scrollbar-corner {
+    background: #080c14;
+}
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: var(--font-family);
+    scrollbar-width: thin;
+    scrollbar-color: #6366f1 #080c14;
 }
 
 body {
