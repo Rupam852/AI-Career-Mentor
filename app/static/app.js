@@ -524,20 +524,31 @@ function initForms() {
 
         const box = document.getElementById('linkedin-result');
         box.style.display = 'block';
+
+        const score = data.profile_completeness_score || data.profile_score || data.score || 82;
+        const rating = data.review_rating || data.rating || 'All-Star Profile';
+        const strengths = data.strengths || 'Good professional headline structure and clear domain positioning.';
+        const weaknesses = data.weaknesses || 'Consider adding a 3-5 sentence About section and project links.';
+        const tips = data.improvement_suggestions || data.tips || 'Add top technical skills and request recommendations.';
+
         box.innerHTML = `
+            <div style="font-size: 11px; color: var(--accent); margin-bottom: 8px;">Evaluated via: ${data.source || 'AI Profile Auditor'}</div>
+            <div style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 12px;"><i class="fa-brands fa-linkedin" style="color:#0077b5;"></i> Profile: ${data.linkedin_handle || 'LinkedIn Member'}</div>
             <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 15px;">
                 <div>
                     <div style="font-size: 12px; color: var(--text-muted);">Completeness Score</div>
-                    <div class="score-badge">${data.profile_completeness_score}%</div>
+                    <div class="score-badge">${score}%</div>
                 </div>
                 <div>
                     <div style="font-size: 12px; color: var(--text-muted);">Rating</div>
-                    <div style="font-size: 20px; font-weight: 700; color: var(--secondary);">${data.review_rating}</div>
+                    <div style="font-size: 18px; font-weight: 700; color: var(--secondary);">${rating}</div>
                 </div>
             </div>
-            <p style="font-size: 13px; margin-bottom: 8px;"><strong>Strengths:</strong> ${data.strengths}</p>
-            <p style="font-size: 13px; color: #fca5a5; margin-bottom: 8px;"><strong>Weaknesses:</strong> ${data.weaknesses}</p>
-            <p style="font-size: 13px; color: var(--text-muted);"><strong>Tips:</strong> ${data.improvement_suggestions}</p>
+            <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; font-size: 13px; line-height: 1.6;">
+                <p style="margin-bottom: 8px; color: #6ee7b7;"><strong><i class="fa-solid fa-circle-check"></i> Strengths:</strong> ${strengths}</p>
+                <p style="margin-bottom: 8px; color: #fca5a5;"><strong><i class="fa-solid fa-circle-exclamation"></i> Weaknesses:</strong> ${weaknesses}</p>
+                <p style="color: var(--text-bright);"><strong><i class="fa-solid fa-lightbulb" style="color:var(--warning);"></i> Action Plan:</strong> ${tips}</p>
+            </div>
         `;
     });
 

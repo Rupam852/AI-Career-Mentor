@@ -404,9 +404,21 @@ def review_linkedin(req: LinkedInRequest):
         """
         ai_res = ai_service._call_openrouter_chain(prompt, req.api_key)
         if ai_res:
-            ai_res["source"] = "AI Profile Auditor"
-            ai_res["linkedin_handle"] = clean_handle or "LinkedIn Member"
-            return ai_res
+            score = ai_res.get("profile_completeness_score") or ai_res.get("profile_score") or ai_res.get("score") or 85
+            rating = ai_res.get("review_rating") or ai_res.get("rating") or "All-Star Profile"
+            strengths = ai_res.get("strengths") or "Strong professional headline and clear domain positioning."
+            weaknesses = ai_res.get("weaknesses") or "Consider adding detailed project achievements and featured links."
+            tips = ai_res.get("improvement_suggestions") or ai_res.get("tips") or "Add top 10+ industry skills and ask for recommendations."
+
+            return {
+                "source": "AI Profile Auditor (" + str(ai_res.get("ai_model_used", "OpenRouter AI")) + ")",
+                "linkedin_handle": clean_handle or "LinkedIn Member",
+                "profile_completeness_score": score,
+                "review_rating": rating,
+                "strengths": strengths,
+                "weaknesses": weaknesses,
+                "improvement_suggestions": tips
+            }
 
     # Local Dataset Fallback
     summary_len = len(req.summary_text.split()) if req.summary_text else 30
