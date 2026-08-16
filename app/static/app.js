@@ -717,7 +717,6 @@ function initForms() {
         });
     });
 }
-}
 
 function selectQuestionForPractice(qText) {
     const input = document.getElementById('eval-q-text');
