@@ -537,10 +537,10 @@ def review_linkedin(req: LinkedInRequest):
     else:
         summary_text_val = f"Experienced technology professional ({derived_name}) specializing in software development, architecture, and tech execution."
 
-    summary_words = len(summary_text_val.split())
-    certs_text = req.certifications.strip() if req.certifications and req.certifications.strip() else "Verified Tech Certifications & Industry Badges"
-    projects_text = req.featured_projects.strip() if req.featured_projects and req.featured_projects.strip() else "Featured Open-Source Repositories & System Projects"
-    activity_level = req.post_activity.strip() if req.post_activity and req.post_activity.strip() else "Active (Weekly Tech Updates & Engagements)"
+    summary_words = len(summary_text_val.split()) if summary_text_val else 0
+    certs_text = req.certifications.strip() if req.certifications and req.certifications.strip() else "None provided (Optional)"
+    projects_text = req.featured_projects.strip() if req.featured_projects and req.featured_projects.strip() else "None provided (Optional)"
+    activity_level = req.post_activity.strip() if req.post_activity and req.post_activity.strip() else "Active Member"
 
     # Query dataset baseline
     df = data_loader.datasets.get('linkedin')
@@ -549,7 +549,7 @@ def review_linkedin(req: LinkedInRequest):
     # Check AI LLM Audit
     if req.api_key or os.environ.get("OPENROUTER_API_KEY") or os.environ.get("GEMINI_API_KEY"):
         prompt = f"""
-        Perform an All-Star LinkedIn Profile & SEO Audit for candidate: "{derived_name}" (Handle: @{clean_handle}).
+        Perform an Authentic LinkedIn Profile & SEO Audit for candidate: "{derived_name}" (Handle: @{clean_handle}).
         - Candidate Name: "{derived_name}"
         - Profile Headline: "{headline_text}"
         - Summary Bio Text ({summary_words} words): "{summary_text_val}"
@@ -558,15 +558,16 @@ def review_linkedin(req: LinkedInRequest):
         - Engagement Activity: "{activity_level}"
 
         Audit Instructions:
-        Evaluate the professional standing and recruiter searchability of @{clean_handle}.
-        Provide a realistic, encouraging All-Star Profile Audit (Score: 80-95%) with actionable recruiter recommendations.
+        Evaluate profile completeness accurately based on provided details. 
+        If certifications or featured projects are listed as 'None provided', note in weaknesses/recommendations that adding them will elevate profile visibility.
+        Provide an honest & encouraging Profile Audit score (70-92%).
 
         Provide a JSON response with exact keys:
-        - "profile_completeness_score": Integer (80-95)
-        - "review_rating": String ("All-Star Profile", "High-Impact Profile")
-        - "strengths": String highlighting profile strengths (headline quality, summary depth, clear positioning)
-        - "weaknesses": String highlighting profile optimization gaps (recommendation requests, featured video/media attachments)
-        - "improvement_suggestions": String with 3 high-impact recommendations to rank #1 in recruiter searches
+        - "profile_completeness_score": Integer (70-92)
+        - "review_rating": String ("All-Star Profile", "Solid Profile", "Intermediate Profile")
+        - "strengths": String highlighting profile strengths (clean URL SEO, headline clarity, engagement)
+        - "weaknesses": String highlighting profile optimization gaps (missing certs/projects, recommendation requests)
+        - "improvement_suggestions": String with 3 high-impact recommendations to attract top recruiters
         """
         ai_res = ai_service._call_openrouter_chain(prompt, req.api_key)
         if ai_res:
