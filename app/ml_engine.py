@@ -83,9 +83,9 @@ class MLEngine:
         X = df_clean[features]
         y = df_clean[target]
 
-        # Train on a sample (up to 30,000) for fast training speed & accuracy balance
-        if len(X) > 30000:
-            X_sample, _, y_sample, _ = train_test_split(X, y, train_size=30000, random_state=42)
+        # Train on a sample (up to 5,000) for fast training speed & Render 512MB RAM compatibility
+        if len(X) > 5000:
+            X_sample, _, y_sample, _ = train_test_split(X, y, train_size=5000, random_state=42)
         else:
             X_sample, y_sample = X, y
 

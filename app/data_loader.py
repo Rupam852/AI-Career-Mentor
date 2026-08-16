@@ -23,8 +23,8 @@ class DataLoader:
         for key, filename in files.items():
             path = os.path.join(DATASET_DIR, filename)
             if os.path.exists(path):
-                # Sample up to 50,000 rows for memory efficiency if huge
-                df = pd.read_csv(path, low_memory=False)
+                # Sample up to 10,000 rows per dataset for Render 512MB RAM cloud compatibility
+                df = pd.read_csv(path, nrows=10000, low_memory=False)
                 self.datasets[key] = df
                 print(f"Loaded {key}: {len(df)} rows.")
 
