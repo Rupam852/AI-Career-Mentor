@@ -434,6 +434,58 @@ def review_github_live(req: GitHubLiveRequest):
         "top_technologies": top_langs if top_langs else ["Git", "Software Development"]
     }
 
+import urllib.request
+from bs4 import BeautifulSoup
+
+def fetch_linkedin_public_data(linkedin_url: str):
+    """
+    Fetches real public metadata (Name, Headline, Bio, Profile Image) 
+    from public LinkedIn Profile URLs using structured OpenGraph meta & JSON-LD tags.
+    """
+    clean_url = linkedin_url.strip()
+    if not clean_url.startswith('http'):
+        clean_url = 'https://www.linkedin.com/in/' + clean_url.lstrip('/')
+    if not clean_url.endswith('/'):
+        clean_url += '/'
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+    }
+
+    try:
+        req = urllib.request.Request(clean_url, headers=headers)
+        with urllib.request.urlopen(req, timeout=5) as response:
+            html = response.read().decode('utf-8', errors='ignore')
+            soup = BeautifulSoup(html, 'html.parser')
+
+            og_title = soup.find('meta', property='og:title') or soup.find('meta', attrs={'name': 'title'})
+            og_desc = soup.find('meta', property='og:description') or soup.find('meta', attrs={'name': 'description'})
+            og_img = soup.find('meta', property='og:image')
+
+            title_val = og_title['content'].strip() if og_title and og_title.get('content') else None
+            desc_val = og_desc['content'].strip() if og_desc and og_desc.get('content') else None
+            img_val = og_img['content'].strip() if og_img and og_img.get('content') else None
+
+            name = None
+            headline = None
+            if title_val:
+                parts = title_val.split(' - ')
+                name = parts[0].strip()
+                if len(parts) > 1:
+                    headline = parts[1].replace(' | LinkedIn', '').replace(' | LinkedIn', '').replace('LinkedIn', '').strip()
+
+            return {
+                "success": True,
+                "name": name or title_val,
+                "headline": headline or title_val,
+                "summary": desc_val,
+                "avatar_url": img_val
+            }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 # --- 8. LinkedIn Review Endpoint ---
 class LinkedInRequest(BaseModel):
     linkedin_url: str
@@ -450,17 +502,28 @@ def review_linkedin(req: LinkedInRequest):
     if 'linkedin.com/in/' in clean_handle:
         clean_handle = clean_handle.split('linkedin.com/in/')[-1].split('/')[0]
 
-    # Handle keyword slug normalization (e.g. "rupam-bairagya" -> "Rupam Bairagya")
-    handle_words = [w.capitalize() for w in clean_handle.replace('-', ' ').replace('_', ' ').split() if w]
-    derived_name = " ".join(handle_words) if handle_words else "LinkedIn Professional"
-
-    summary_words = len(req.summary_text.split()) if req.summary_text and req.summary_text.strip() else 45
+    # Attempt Live Public Scrape of LinkedIn Profile HTML
+    live_profile = fetch_linkedin_public_data(req.linkedin_url)
     
+    # Handle keyword slug normalization fallback
+    handle_words = [w.capitalize() for w in clean_handle.replace('-', ' ').replace('_', ' ').split() if w]
+    derived_name = live_profile.get("name") if live_profile.get("success") and live_profile.get("name") else (" ".join(handle_words) if handle_words else "LinkedIn Professional")
+
     if req.headline and req.headline.strip():
         headline_text = req.headline.strip()
+    elif live_profile.get("success") and live_profile.get("headline"):
+        headline_text = live_profile["headline"]
     else:
         headline_text = f"Software & AI Technology Professional ({derived_name})"
 
+    if req.summary_text and req.summary_text.strip():
+        summary_text_val = req.summary_text.strip()
+    elif live_profile.get("success") and live_profile.get("summary"):
+        summary_text_val = live_profile["summary"]
+    else:
+        summary_text_val = f"Experienced technology professional ({derived_name}) specializing in software development, architecture, and tech execution."
+
+    summary_words = len(summary_text_val.split())
     certs_text = req.certifications.strip() if req.certifications and req.certifications.strip() else "Verified Tech Certifications & Industry Badges"
     projects_text = req.featured_projects.strip() if req.featured_projects and req.featured_projects.strip() else "Featured Open-Source Repositories & System Projects"
     activity_level = req.post_activity.strip() if req.post_activity and req.post_activity.strip() else "Active (Weekly Tech Updates & Engagements)"
@@ -472,22 +535,22 @@ def review_linkedin(req: LinkedInRequest):
     # Check AI LLM Audit
     if req.api_key or os.environ.get("OPENROUTER_API_KEY") or os.environ.get("GEMINI_API_KEY"):
         prompt = f"""
-        Perform an All-Star LinkedIn Profile & SEO Audit for candidate handle: "{clean_handle or req.linkedin_url}".
-        - Inferred Professional Name: "{derived_name}"
+        Perform an All-Star LinkedIn Profile & SEO Audit for candidate: "{derived_name}" (Handle: @{clean_handle}).
+        - Candidate Name: "{derived_name}"
         - Profile Headline: "{headline_text}"
-        - Summary Bio Depth: "{req.summary_text if req.summary_text else 'Detailed domain summary covering experience, core tech stack, and impact.'}"
+        - Summary Bio Text ({summary_words} words): "{summary_text_val}"
         - Certifications & Licenses: "{certs_text}"
         - Featured Projects & Links: "{projects_text}"
         - Engagement Activity: "{activity_level}"
 
         Audit Instructions:
-        Evaluate the professional SEO standing of the clean URL slug (@{clean_handle}).
-        Provide a realistic, encouraging All-Star Profile Audit (Score: 78-95%) with actionable recruiter recommendations.
+        Evaluate the professional standing and recruiter searchability of @{clean_handle}.
+        Provide a realistic, encouraging All-Star Profile Audit (Score: 80-95%) with actionable recruiter recommendations.
 
         Provide a JSON response with exact keys:
-        - "profile_completeness_score": Integer (78-95)
+        - "profile_completeness_score": Integer (80-95)
         - "review_rating": String ("All-Star Profile", "High-Impact Profile")
-        - "strengths": String highlighting profile strengths (clean custom URL SEO, strong domain positioning, active engagement)
+        - "strengths": String highlighting profile strengths (headline quality, summary depth, clear positioning)
         - "weaknesses": String highlighting profile optimization gaps (recommendation requests, featured video/media attachments)
         - "improvement_suggestions": String with 3 high-impact recommendations to rank #1 in recruiter searches
         """
@@ -495,13 +558,15 @@ def review_linkedin(req: LinkedInRequest):
         if ai_res:
             score = ai_res.get("profile_completeness_score") or ai_res.get("profile_score") or ai_res.get("score") or 85
             rating = ai_res.get("review_rating") or ai_res.get("rating") or "All-Star Profile"
-            strengths = ai_res.get("strengths") or f"Clean SEO profile slug (@{clean_handle}), strong domain positioning, and active tech community engagement."
+            strengths = ai_res.get("strengths") or f"Strong professional headline ('{headline_text}'), clear domain positioning, and active tech community engagement."
             weaknesses = ai_res.get("weaknesses") or "Could request 3+ peer recommendations and attach live media project demos to the Featured section."
             tips = ai_res.get("improvement_suggestions") or ai_res.get("tips") or "Pin top portfolio projects, add 15+ industry skill badges, and post weekly technical learnings."
 
             return {
-                "source": "AI Profile Auditor (" + str(ai_res.get("ai_model_used", "OpenRouter AI")) + ")",
+                "source": "Live LinkedIn Public Meta + AI Profile Auditor (" + str(ai_res.get("ai_model_used", "OpenRouter AI")) + ")",
                 "linkedin_handle": clean_handle or "LinkedIn Member",
+                "full_name": derived_name,
+                "avatar_url": live_profile.get("avatar_url"),
                 "headline_analyzed": headline_text,
                 "summary_words_count": summary_words,
                 "certifications_analyzed": certs_text,

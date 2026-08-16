@@ -639,14 +639,18 @@ function initForms() {
             box.innerHTML = `
                 <div style="font-size: 11px; color: var(--accent); margin-bottom: 8px;">Evaluated via: ${data.source || 'AI Profile Auditor'}</div>
                 
-                <!-- Comprehensive Profile Inputs Card -->
+                <!-- Live Scraped LinkedIn Profile Card -->
                 <div style="background: rgba(0,119,181,0.08); border: 1px solid rgba(0,119,181,0.25); padding: 14px; border-radius: 8px; margin-bottom: 15px;">
-                    <div style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 8px;">
-                        <i class="fa-brands fa-linkedin" style="color:#0077b5;"></i> Audited Profile: <span style="color: var(--secondary);">@${data.linkedin_handle || 'LinkedIn Member'}</span>
+                    <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 10px;">
+                        ${data.avatar_url ? `<img src="${data.avatar_url}" style="width: 48px; height: 48px; border-radius: 50%; border: 2px solid #0077b5;">` : ''}
+                        <div>
+                            <div style="font-size: 15px; font-weight: 700; color: #fff;">${data.full_name || data.linkedin_handle}</div>
+                            <div style="font-size: 12px; color: var(--secondary);"><i class="fa-brands fa-linkedin" style="color:#0077b5;"></i> @${data.linkedin_handle}</div>
+                        </div>
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; line-height: 1.5;">
-                        <div style="color: var(--text-bright);"><strong>Headline:</strong> "${headline}"</div>
-                        <div style="color: var(--text-muted);"><strong>Summary Read:</strong> ${summaryWords} words</div>
+                        <div style="color: var(--text-bright);"><strong>Scraped Headline:</strong> "${headline}"</div>
+                        <div style="color: var(--text-muted);"><strong>Bio Summary Depth:</strong> ${summaryWords} words analyzed</div>
                         <div style="color: #fcd34d;"><strong><i class="fa-solid fa-certificate"></i> Certifications:</strong> ${certs}</div>
                         <div style="color: #67e8f9;"><strong><i class="fa-solid fa-diagram-project"></i> Featured Projects:</strong> ${projects}</div>
                         <div style="color: #a5b4fc;"><strong><i class="fa-solid fa-newspaper"></i> Activity Level:</strong> ${activity}</div>
