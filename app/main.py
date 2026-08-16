@@ -1,0 +1,392 @@
+import os
+import random
+import pandas as pd
+from fastapi import FastAPI, Request, File, UploadFile, Form, Header
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, JSONResponse
+from pydantic import BaseModel
+from typing import Optional, List
+
+from app.data_loader import data_loader
+from app.ml_engine import ml_engine
+from app.ai_service import ai_service
+from app.parsers import extract_text_from_file, fetch_github_profile_data
+
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI(title="AI Career Mentor API", version="2.0.0")
+
+# Enable CORS for frontend deployment (Vercel, Netlify, custom domains)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Serve Static Files
+static_dir = os.path.join(os.path.dirname(__file__), 'static')
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+@app.on_event("startup")
+def startup_event():
+    ml_engine.train_or_load_models()
+
+@app.get("/", response_class=HTMLResponse)
+def read_root():
+    index_path = os.path.join(static_dir, "index.html")
+    with open(index_path, "r", encoding="utf-8") as f:
+        return f.read()
+
+@app.get("/api/options")
+def get_options():
+    return data_loader.get_unique_options()
+
+# --- 1. Salary Prediction Endpoint ---
+class SalaryRequest(BaseModel):
+    industry: str
+    job_title: str
+    years_experience: float
+    education_level: str
+    degree_field: Optional[str] = "Computer Science"
+    skills_count: Optional[int] = 5
+    certifications_count: Optional[int] = 1
+    company_size: Optional[str] = "Mid-size (201-1000)"
+    work_type: Optional[str] = "Hybrid"
+
+@app.post("/api/salary-prediction")
+def predict_salary(req: SalaryRequest):
+    return ml_engine.predict_salary(
+        industry=req.industry,
+        job_title=req.job_title,
+        years_experience=req.years_experience,
+        education_level=req.education_level,
+        degree_field=req.degree_field,
+        skills_count=req.skills_count,
+        certifications_count=req.certifications_count,
+        company_size=req.company_size,
+        work_type=req.work_type
+    )
+
+# --- 2. Career Recommendation Endpoint ---
+class CareerRequest(BaseModel):
+    education_level: str
+    years_experience: float
+    work_style: str
+    interests: str
+    current_skills: str
+
+@app.post("/api/career-recommendation")
+def recommend_career(req: CareerRequest):
+    return ml_engine.recommend_career(
+        education_level=req.education_level,
+        years_experience=req.years_experience,
+        work_style=req.work_style,
+        interests=req.interests,
+        skills=req.current_skills
+    )
+
+# --- 3. Skill Gap Analysis Endpoint ---
+class SkillGapRequest(BaseModel):
+    current_role: str
+    target_role: str
+    current_skills: str
+
+@app.post("/api/skill-gap")
+def analyze_skill_gap(req: SkillGapRequest):
+    df = data_loader.datasets.get('skill_gap')
+    matched_row = None
+    if df is not None:
+        matches = df[df['target_role'].astype(str).str.lower().str.contains(req.target_role.lower(), na=False)]
+        if not matches.empty:
+            matched_row = matches.iloc[0]
+
+    user_skills_list = [s.strip().lower() for s in req.current_skills.split(',') if s.strip()]
+
+    if matched_row is not None:
+        req_skills_str = str(matched_row.get('required_skills_for_target', ''))
+        req_skills_list = [s.strip() for s in req_skills_str.split(',') if s.strip()]
+        missing = [s for s in req_skills_list if s.lower() not in user_skills_list]
+        gap_count = len(missing)
+        readiness = round(max(10.0, 100.0 - (gap_count * 15.0)), 1)
+        est_months = round(float(matched_row.get('estimated_months_to_close_gap', gap_count * 1.5)), 1)
+        priority = str(matched_row.get('learning_priority', 'High' if gap_count > 3 else 'Medium'))
+        resources = str(matched_row.get('recommended_resources', 'Online courses & hands-on projects'))
+    else:
+        req_skills_list = ["Advanced Domain Concepts", "System Design", "Cloud Infrastructure", "Project Management", "Leadership"]
+        missing = [s for s in req_skills_list if s.lower() not in user_skills_list]
+        gap_count = len(missing)
+        readiness = round(max(20.0, 100.0 - (gap_count * 18.0)), 1)
+        est_months = round(gap_count * 1.5, 1)
+        priority = "High" if gap_count > 2 else "Medium"
+        resources = "Coursera Specializations, Kaggle projects, Documentation"
+
+    return {
+        "current_role": req.current_role,
+        "target_role": req.target_role,
+        "user_skills": user_skills_list,
+        "required_skills": req_skills_list,
+        "missing_skills": missing,
+        "skill_gap_count": gap_count,
+        "readiness_percentage": readiness,
+        "estimated_months_to_close_gap": est_months,
+        "learning_priority": priority,
+        "recommended_resources": resources
+    }
+
+# --- 4. Roadmap Generator Endpoint ---
+class RoadmapRequest(BaseModel):
+    current_role: str
+    target_role: str
+    weekly_hours: Optional[int] = 10
+
+@app.post("/api/roadmap")
+def generate_roadmap(req: RoadmapRequest):
+    df = data_loader.datasets.get('roadmap')
+    matched_row = None
+    if df is not None:
+        matches = df[df['target_role'].astype(str).str.lower().str.contains(req.target_role.lower(), na=False)]
+        if not matches.empty:
+            matched_row = matches.iloc[0]
+
+    if matched_row is not None:
+        steps_raw = str(matched_row.get('roadmap_steps', ''))
+        milestones_raw = str(matched_row.get('milestones', ''))
+        total_months = int(matched_row.get('total_duration_months', 6))
+        phases_count = int(matched_row.get('number_of_phases', 4))
+        focus = str(matched_row.get('focus_skills', 'Core Technical Skills'))
+        cert = str(matched_row.get('target_certification', 'Industry Certified Professional'))
+        diff = str(matched_row.get('difficulty_level', 'Moderate'))
+    else:
+        total_months = 6
+        phases_count = 4
+        focus = "Core Domain Skills, Project Execution, System Design"
+        cert = "Professional Certification"
+        diff = "Moderate"
+        steps_raw = "Phase 1 (1.5 mo): Fundamentals & Tooling | Phase 2 (1.5 mo): Advanced Core Practice | Phase 3 (1.5 mo): Real World Projects | Phase 4 (1.5 mo): Career Portfolio & Applications"
+        milestones_raw = "Month 2: Complete Basics | Month 4: Portfolio Project Published | Month 6: Target Role Ready"
+
+    steps = [s.strip() for s in steps_raw.split('|') if s.strip()]
+    milestones = [m.strip() for m in milestones_raw.split('|') if m.strip()]
+
+    return {
+        "target_role": req.target_role,
+        "total_duration_months": total_months,
+        "weekly_hours_commitment": req.weekly_hours,
+        "number_of_phases": phases_count,
+        "focus_skills": focus,
+        "target_certification": cert,
+        "difficulty_level": diff,
+        "roadmap_steps": steps,
+        "milestones": milestones
+    }
+
+# --- 5. Resume Analysis & PDF/DOCX Upload Endpoint ---
+class ResumeRequest(BaseModel):
+    resume_text: str
+    target_job_title: Optional[str] = "Data Scientist"
+    api_key: Optional[str] = None
+
+@app.post("/api/resume-analysis")
+def analyze_resume(req: ResumeRequest):
+    # Check if Gemini AI evaluation is possible
+    if req.api_key or os.environ.get("GEMINI_API_KEY"):
+        ai_res = ai_service.evaluate_resume(req.resume_text, req.target_job_title, req.api_key)
+        if ai_res:
+            ai_res["source"] = "Gemini AI Engine"
+            ai_res["word_count"] = len(req.resume_text.split())
+            return ai_res
+
+    # Local Dataset Fallback
+    text = req.resume_text
+    word_count = len(text.split())
+    df = data_loader.datasets.get('resume')
+    sample_row = df.iloc[0] if df is not None and not df.empty else None
+
+    ats_score = min(96, max(35, int(45 + (min(word_count, 400) / 400.0) * 35 + (20 if "project" in text.lower() else 0))))
+    keyword_match = min(92, max(30, int(ats_score * 0.9)))
+    
+    if sample_row is not None:
+        strengths = str(sample_row.get('strengths', 'Strong hands-on experience and skills listed.'))
+        weaknesses = str(sample_row.get('weaknesses', 'Could include more quantifiable metrics.'))
+        suggestions = str(sample_row.get('improvement_suggestions', 'Add metrics (e.g. % growth, revenue impact).'))
+    else:
+        strengths = "Good technical clarity and readable format."
+        weaknesses = "Lacks quantitative impact metrics."
+        suggestions = "Quantify achievements (e.g., 'improved performance by 25%'); Add target keywords."
+
+    rating = "Excellent" if ats_score >= 85 else ("Good" if ats_score >= 70 else "Average")
+
+    return {
+        "source": "Dataset ML Engine",
+        "word_count": word_count,
+        "ats_score": ats_score,
+        "keyword_match_percentage": keyword_match,
+        "overall_rating": rating,
+        "strengths": strengths,
+        "weaknesses": weaknesses,
+        "improvement_suggestions": suggestions
+    }
+
+@app.post("/api/resume-upload")
+async def upload_resume(file: UploadFile = File(...), target_job_title: str = Form("Data Scientist"), api_key: Optional[str] = Form(None)):
+    contents = await file.read()
+    extracted_text = extract_text_from_file(contents, file.filename)
+    
+    if not extracted_text:
+        return JSONResponse(status_code=400, content={"error": f"Could not extract text from file '{file.filename}'."})
+
+    req = ResumeRequest(resume_text=extracted_text, target_job_title=target_job_title, api_key=api_key)
+    res = analyze_resume(req)
+    res["filename"] = file.filename
+    res["extracted_preview"] = extracted_text[:300] + "..." if len(extracted_text) > 300 else extracted_text
+    return res
+
+# --- 6. Interview Prep & Answer Evaluator ---
+class InterviewRequest(BaseModel):
+    job_title: str
+    industry: Optional[str] = "Information Technology"
+
+@app.post("/api/interview-prep")
+def get_interview_questions(req: InterviewRequest):
+    df = data_loader.datasets.get('interview')
+    questions = []
+    if df is not None:
+        matches = df[df['job_title'].astype(str).str.lower().str.contains(req.job_title.lower(), na=False)]
+        if matches.empty:
+            matches = df.sample(min(5, len(df)))
+        else:
+            matches = matches.head(5)
+
+        for _, row in matches.iterrows():
+            questions.append({
+                "question_id": int(row.get('question_id', 1)),
+                "question_type": str(row.get('question_type', 'Technical')),
+                "difficulty_level": str(row.get('difficulty_level', 'Medium')),
+                "question_text": str(row.get('question_text', '')),
+                "key_evaluation_points": str(row.get('key_evaluation_points', '')),
+                "ideal_answer_length_words": int(row.get('ideal_answer_length_words', 100))
+            })
+    return {"job_title": req.job_title, "questions": questions}
+
+class AnswerEvaluationRequest(BaseModel):
+    job_title: str
+    question_text: str
+    candidate_answer: str
+    api_key: Optional[str] = None
+
+@app.post("/api/interview-evaluate")
+def evaluate_interview_answer(req: AnswerEvaluationRequest):
+    # Check Gemini AI First
+    if req.api_key or os.environ.get("GEMINI_API_KEY"):
+        ai_res = ai_service.evaluate_interview_answer(req.question_text, req.candidate_answer, req.job_title, req.api_key)
+        if ai_res:
+            ai_res["source"] = "Gemini AI Engine"
+            return ai_res
+
+    # Rule-Based / Dataset Fallback
+    word_count = len(req.candidate_answer.split())
+    score = min(9.5, max(4.0, round(5.0 + (word_count / 120.0) * 4.0, 1)))
+    tier = "Solid Response" if score >= 7.5 else ("Needs Improvement" if score < 6.0 else "Average Response")
+    
+    return {
+        "source": "Dataset Rule Engine",
+        "score_out_of_10": score,
+        "performance_tier": tier,
+        "strengths": "Good effort providing structured thoughts in response.",
+        "missing_key_points": "Could expand more on specific technical trade-offs, metrics, or methodology.",
+        "constructive_feedback": "Use the STAR method (Situation, Task, Action, Result) to structure your response clearly.",
+        "ideal_model_answer": "Focus on state-of-the-art methodology, explain design trade-offs step-by-step, and state quantitative impact metrics."
+    }
+
+# --- 7. Live GitHub API & Review Endpoint ---
+class GitHubLiveRequest(BaseModel):
+    username_or_url: str
+    api_key: Optional[str] = None
+
+@app.post("/api/github-live-review")
+def review_github_live(req: GitHubLiveRequest):
+    gh_data = fetch_github_profile_data(req.username_or_url)
+    if "error" in gh_data:
+        return JSONResponse(status_code=400, content=gh_data)
+
+    # Check Gemini AI Audit
+    if req.api_key or os.environ.get("GEMINI_API_KEY"):
+        ai_res = ai_service.review_github_profile(gh_data, req.api_key)
+        if ai_res:
+            ai_res["source"] = "Gemini AI Engine"
+            ai_res["raw_metrics"] = gh_data
+            return ai_res
+
+    # Fallback to local scoring
+    repos = gh_data.get('public_repos', 0)
+    stars = gh_data.get('total_stars', 0)
+    followers = gh_data.get('followers', 0)
+
+    score = min(100, max(25, int(repos * 2.5 + stars * 1.5 + followers * 2.0)))
+    rating = "Outstanding Developer" if score >= 85 else ("Solid Developer" if score >= 65 else "Building Portfolio")
+
+    return {
+        "source": "Live GitHub API + Dataset Rules",
+        "raw_metrics": gh_data,
+        "profile_score": score,
+        "review_rating": rating,
+        "strengths": f"Active GitHub user with {repos} public repos, {stars} total stars, and {followers} followers.",
+        "weaknesses": "Can increase open-source contributions and maintain comprehensive README.md files.",
+        "improvement_suggestions": "Pin top 4 repositories, add live demo links in repository About sections, and write descriptive commit messages."
+    }
+
+# --- 8. LinkedIn Review Endpoint ---
+class LinkedInRequest(BaseModel):
+    headline: str
+    has_profile_photo: bool
+    has_banner_image: bool
+    summary_word_count: int
+    connections_count: int
+    skills_count: int
+
+@app.post("/api/linkedin-review")
+def review_linkedin(req: LinkedInRequest):
+    score = 0
+    if req.has_profile_photo: score += 20
+    if req.has_banner_image: score += 15
+    if len(req.headline) > 15: score += 20
+    if req.summary_word_count >= 50: score += 20
+    elif req.summary_word_count > 0: score += 10
+    if req.connections_count >= 500: score += 15
+    elif req.connections_count >= 100: score += 10
+    if req.skills_count >= 10: score += 10
+    elif req.skills_count >= 5: score += 5
+
+    score = min(100, max(25, score))
+    rating = "All-Star" if score >= 85 else ("Intermediate" if score >= 65 else "Needs Improvement")
+
+    strengths = []
+    weaknesses = []
+    tips = []
+
+    if req.has_profile_photo: strengths.append("Professional profile photo added.")
+    else: weaknesses.append("Missing profile photo.")
+    
+    if req.has_banner_image: strengths.append("Custom cover banner image present.")
+    else: weaknesses.append("Default background banner image.")
+
+    if req.summary_word_count < 30:
+        weaknesses.append("Summary section is missing or too brief.")
+        tips.append("Write a 3-5 sentence About section highlighting key achievements.")
+
+    if req.skills_count < 5:
+        weaknesses.append("Fewer than 5 skills listed.")
+        tips.append("Add at least 10-15 core industry skills to rank in search results.")
+
+    if not tips:
+        tips.append("Regularly post industry insights to boost profile views.")
+
+    return {
+        "profile_completeness_score": score,
+        "review_rating": rating,
+        "strengths": "; ".join(strengths) if strengths else "Good basic setup.",
+        "weaknesses": "; ".join(weaknesses) if weaknesses else "Minor polish needed.",
+        "improvement_suggestions": " ".join(tips)
+    }

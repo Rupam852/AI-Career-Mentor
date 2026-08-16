@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Career Mentor - Intelligent Career & ML Platform</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon"><i class="fa-solid fa-brain"></i></div>
+            <div>
+                <div class="brand-title">AI Career Mentor</div>
+                <div style="font-size: 10px; color: var(--text-muted);">ML & Gemini AI Intelligence</div>
+            </div>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item active" data-tab="overview"><i class="fa-solid fa-gauge-high"></i> Dashboard Overview</li>
+            <li class="nav-item" data-tab="salary"><i class="fa-solid fa-calculator"></i> AI Salary Predictor</li>
+            <li class="nav-item" data-tab="career"><i class="fa-solid fa-compass"></i> Career Finder ML</li>
+            <li class="nav-item" data-tab="skillgap"><i class="fa-solid fa-chart-line"></i> Skill Gap Analyzer</li>
+            <li class="nav-item" data-tab="roadmap"><i class="fa-solid fa-route"></i> Roadmap Generator</li>
+            <li class="nav-item" data-tab="resume"><i class="fa-solid fa-file-invoice"></i> Resume ATS & File Upload</li>
+            <li class="nav-item" data-tab="interview"><i class="fa-solid fa-comments"></i> AI Interview Simulator</li>
+            <li class="nav-item" data-tab="linkedin"><i class="fa-brands fa-linkedin"></i> LinkedIn Audit</li>
+            <li class="nav-item" data-tab="github"><i class="fa-brands fa-github"></i> Live GitHub Review</li>
+        </ul>
+    </aside>
+
+    <!-- Main Application Area -->
+    <div class="main-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-title">
+                <h2 id="header-text">Dashboard Overview</h2>
+                <p>Powered by 1.6M Dataset Samples, Scikit-Learn Models & Gemini AI</p>
+            </div>
+            <div class="stats-bar">
+                <div class="api-key-box" title="Enter your Gemini API Key for deep LLM evaluation">
+                    <i class="fa-solid fa-key" style="color: var(--warning);"></i>
+                    <input type="password" id="global-api-key" placeholder="Gemini API Key (Optional)">
+                </div>
+                <div class="stat-pill"><i class="fa-solid fa-robot"></i> Engine: <span id="engine-status-badge">Hybrid ML / AI</span></div>
+            </div>
+        </header>
+
+        <!-- Content Workspace -->
+        <main class="content-body">
+
+            <!-- 0. OVERVIEW TAB -->
+            <div class="tab-pane active" id="tab-overview">
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-layer-group"></i> Dataset & AI Knowledge Hub</div>
+                        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">
+                            Integrates 8 specialized machine learning datasets with optional Gemini AI evaluation to analyze Resumes, PDF uploads, GitHub profiles, and practice live AI Mock Interviews!
+                        </p>
+                        <div class="tag-list">
+                            <span class="tag"><i class="fa-solid fa-check"></i> PDF / DOCX Resume Upload</span>
+                            <span class="tag"><i class="fa-solid fa-check"></i> Live GitHub API Fetch</span>
+                            <span class="tag"><i class="fa-solid fa-check"></i> AI Interview Answer Scoring</span>
+                            <span class="tag"><i class="fa-solid fa-check"></i> INR Lakhs Salary Predictor</span>
+                            <span class="tag"><i class="fa-solid fa-check"></i> 1.6M ML Dataset Engine</span>
+                            <span class="tag"><i class="fa-solid fa-check"></i> Gemini AI Support</span>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-chart-pie"></i> Salary & Industry Insights</div>
+                        <canvas id="overviewChart" style="max-height: 220px;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1. SALARY PREDICTOR TAB -->
+            <div class="tab-pane" id="tab-salary">
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-sliders"></i> Input Candidate Profile</div>
+                        <form id="salary-form">
+                            <div class="form-group">
+                                <label>Industry</label>
+                                <select class="form-control" id="sal-industry"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Job Title</label>
+                                <select class="form-control" id="sal-jobtitle"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Years of Experience</label>
+                                <input type="number" class="form-control" id="sal-exp" value="3" min="0" max="40" step="0.5">
+                            </div>
+                            <div class="form-group">
+                                <label>Education Level</label>
+                                <select class="form-control" id="sal-edu"></select>
+                            </div>
+                            <button type="submit" class="btn-primary"><i class="fa-solid fa-wand-magic-sparkles"></i> Predict Salary Range</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-chart-simple"></i> ML Salary Estimate</div>
+                        <div id="salary-result" class="result-box" style="display: none;">
+                            <div style="font-size: 13px; color: var(--text-muted);">Estimated Annual Package (INR & USD)</div>
+                            <div class="score-badge" id="sal-out-val" style="font-size: 32px;">₹0</div>
+                            <div style="font-size: 13px; color: var(--secondary); margin-top: 4px;" id="sal-out-usd">$0 USD / year</div>
+                            <div style="font-size: 14px; margin-top: 8px;">Confidence Range: <strong id="sal-out-range" style="color: var(--accent);">₹0 - ₹0</strong></div>
+                            <div style="margin-top: 15px;">
+                                <canvas id="salaryChart" style="max-height: 180px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. CAREER FINDER ML TAB -->
+            <div class="tab-pane" id="tab-career">
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-user-gear"></i> Your Career Profile</div>
+                        <form id="career-form">
+                            <div class="form-group">
+                                <label>Education Level</label>
+                                <select class="form-control" id="car-edu"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Years of Experience</label>
+                                <input type="number" class="form-control" id="car-exp" value="2">
+                            </div>
+                            <div class="form-group">
+                                <label>Preferred Work Style</label>
+                                <select class="form-control" id="car-style">
+                                    <option>Independent / Self-directed</option>
+                                    <option>Collaborative / Team-oriented</option>
+                                    <option>Fast-paced / Startup</option>
+                                    <option>Structured / Corporate</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Interests & Passions</label>
+                                <input type="text" class="form-control" id="car-interests" value="Technology, Data Analysis, Problem Solving">
+                            </div>
+                            <div class="form-group">
+                                <label>Current Skills (comma separated)</label>
+                                <input type="text" class="form-control" id="car-skills" value="Python, SQL, Statistics, Excel">
+                            </div>
+                            <button type="submit" class="btn-primary"><i class="fa-solid fa-brain"></i> Find Ideal Career Paths</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-bullseye"></i> Recommended Matches</div>
+                        <div id="career-result" class="result-box" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. SKILL GAP ANALYZER TAB -->
+            <div class="tab-pane" id="tab-skillgap">
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-arrows-split-up-and-left"></i> Role Transition Setup</div>
+                        <form id="skillgap-form">
+                            <div class="form-group">
+                                <label>Current Role</label>
+                                <input type="text" class="form-control" id="sg-current" value="Junior Developer">
+                            </div>
+                            <div class="form-group">
+                                <label>Target Goal Role</label>
+                                <select class="form-control" id="sg-target"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Your Existing Skills</label>
+                                <input type="text" class="form-control" id="sg-skills" value="Python, Git, Basic SQL">
+                            </div>
+                            <button type="submit" class="btn-primary"><i class="fa-solid fa-magnifying-glass-chart"></i> Analyze Skill Gaps</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-list-check"></i> Gap Diagnosis & Action Plan</div>
+                        <div id="skillgap-result" class="result-box" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. ROADMAP GENERATOR TAB -->
+            <div class="tab-pane" id="tab-roadmap">
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-compass-drafting"></i> Target Role Selection</div>
+                        <form id="roadmap-form">
+                            <div class="form-group">
+                                <label>Current Role</label>
+                                <input type="text" class="form-control" id="rm-current" value="Data Analyst">
+                            </div>
+                            <div class="form-group">
+                                <label>Target Role</label>
+                                <select class="form-control" id="rm-target"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Weekly Commitment (Hours)</label>
+                                <input type="number" class="form-control" id="rm-hours" value="12" min="2" max="40">
+                            </div>
+                            <button type="submit" class="btn-primary"><i class="fa-solid fa-map-location-dot"></i> Generate Personal Roadmap</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-timeline"></i> Step-by-Step Learning Timeline</div>
+                        <div id="roadmap-result" class="result-box" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. RESUME ATS SCORER & FILE UPLOAD TAB -->
+            <div class="tab-pane" id="tab-resume">
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-file-upload"></i> Upload PDF/DOCX Resume or Paste Text</div>
+                        
+                        <!-- File Upload Dropzone -->
+                        <div class="dropzone" id="resume-dropzone">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <div style="font-size: 14px; font-weight: 600; color: #fff;">Click or Drag Resume File (.pdf, .docx, .txt)</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Automatic text extraction</div>
+                            <input type="file" id="resume-file-input" accept=".pdf,.docx,.doc,.txt" style="display: none;">
+                        </div>
+                        <div id="file-info-badge" style="display:none; font-size: 12px; color: var(--accent); margin-bottom: 12px;"></div>
+
+                        <form id="resume-form">
+                            <div class="form-group">
+                                <label>Target Job Title</label>
+                                <input type="text" class="form-control" id="res-target" value="Data Scientist">
+                            </div>
+                            <div class="form-group">
+                                <label>Resume Text / Summary (Auto-populated from upload)</label>
+                                <textarea class="form-control" id="res-text" rows="6" placeholder="Paste your resume text or upload file above..."></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary"><i class="fa-solid fa-shield-halved"></i> Run ATS & AI Resume Audit</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-square-poll-vertical"></i> ATS Score & AI Analysis</div>
+                        <div id="resume-result" class="result-box" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. INTERVIEW SIMULATOR & ANSWER EVALUATOR TAB -->
+            <div class="tab-pane" id="tab-interview">
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-user-ninja"></i> Target Role & Practice Question</div>
+                        <form id="interview-form" style="margin-bottom: 16px;">
+                            <div class="form-group">
+                                <label>Target Job Title</label>
+                                <select class="form-control" id="int-role"></select>
+                            </div>
+                            <button type="submit" class="btn-primary"><i class="fa-solid fa-circle-play"></i> Fetch Question Set</button>
+                        </form>
+
+                        <!-- Answer Evaluator Box -->
+                        <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 16px;">
+                            <div class="card-title" style="font-size: 14px;"><i class="fa-solid fa-pen-to-square"></i> Practice & Grade Your Answer</div>
+                            <form id="answer-eval-form">
+                                <div class="form-group">
+                                    <label>Active Interview Question</label>
+                                    <input type="text" class="form-control" id="eval-q-text" readonly placeholder="Fetch a question first or type custom question...">
+                                </div>
+                                <div class="form-group">
+                                    <label>Type / Paste Your Answer</label>
+                                    <textarea class="form-control" id="eval-cand-answer" rows="5" placeholder="Write your interview answer here..."></textarea>
+                                </div>
+                                <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, var(--accent), var(--secondary));"><i class="fa-solid fa-medal"></i> Grade Answer with AI</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-award"></i> Question List & AI Answer Grade</div>
+                        <div id="interview-result" class="result-box" style="display: none;"></div>
+                        <div id="answer-eval-result" class="result-box" style="display: none; margin-top: 16px; border-color: var(--accent);"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. LINKEDIN AUDIT TAB -->
+            <div class="tab-pane" id="tab-linkedin">
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-title"><i class="fa-brands fa-linkedin"></i> LinkedIn Metrics & Profile</div>
+                        <form id="linkedin-form">
+                            <div class="form-group">
+                                <label>Headline Text</label>
+                                <input type="text" class="form-control" id="li-headline" value="AI Research Engineer | Data Science Professional">
+                            </div>
+                            <div style="display: flex; gap: 20px; margin-bottom: 15px;">
+                                <label><input type="checkbox" id="li-photo" checked> Has Profile Photo</label>
+                                <label><input type="checkbox" id="li-banner" checked> Has Cover Banner</label>
+                            </div>
+                            <div class="form-group">
+                                <label>About Summary Word Count</label>
+                                <input type="number" class="form-control" id="li-summary" value="65">
+                            </div>
+                            <div class="form-group">
+                                <label>Connections Count</label>
+                                <input type="number" class="form-control" id="li-connections" value="450">
+                            </div>
+                            <div class="form-group">
+                                <label>Skills Listed Count</label>
+                                <input type="number" class="form-control" id="li-skills" value="12">
+                            </div>
+                            <button type="submit" class="btn-primary"><i class="fa-solid fa-check-double"></i> Review LinkedIn Profile</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-star"></i> Profile Score & Recommendations</div>
+                        <div id="linkedin-result" class="result-box" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 8. LIVE GITHUB REVIEW TAB -->
+            <div class="tab-pane" id="tab-github">
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-title"><i class="fa-brands fa-github"></i> Live GitHub Profile & Repos Fetcher</div>
+                        <form id="github-live-form" style="margin-bottom: 20px;">
+                            <div class="form-group">
+                                <label>GitHub Username or URL</label>
+                                <input type="text" class="form-control" id="gh-input-username" value="torvalds" placeholder="e.g. torvalds or https://github.com/torvalds">
+                            </div>
+                            <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, #24292e, var(--primary));"><i class="fa-brands fa-github"></i> Fetch Live GitHub Stats & Audit</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title"><i class="fa-solid fa-medal"></i> Live Developer Audit & Stats</div>
+                        <div id="github-result" class="result-box" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
