@@ -636,9 +636,17 @@ function initForms() {
             const projects = data.projects_analyzed || 'None provided';
             const activity = data.activity_level || 'Active Member';
 
+            const isAuthProtected = headline.includes("Protected by LinkedIn");
+
             box.innerHTML = `
                 <div style="font-size: 11px; color: var(--accent); margin-bottom: 8px;">Evaluated via: ${data.source || 'AI Profile Auditor'}</div>
                 
+                ${isAuthProtected ? `
+                <div style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 12px; color: #a5b4fc;">
+                    <i class="fa-solid fa-lock" style="color: var(--warning);"></i> <strong>LinkedIn Security Note:</strong> LinkedIn protects profile text behind login auth walls. For 100% accurate AI audit of your real text, click <em>'Optional: Customize Headline'</em> above to paste your headline & bio!
+                </div>
+                ` : ''}
+
                 <!-- Live Scraped LinkedIn Profile Card -->
                 <div style="background: rgba(0,119,181,0.08); border: 1px solid rgba(0,119,181,0.25); padding: 14px; border-radius: 8px; margin-bottom: 15px;">
                     <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 10px;">

@@ -523,19 +523,21 @@ def review_linkedin(req: LinkedInRequest):
     handle_words = [w.capitalize() for w in clean_handle.replace('-', ' ').replace('_', ' ').split() if w]
     derived_name = live_profile.get("name") if live_profile.get("success") and live_profile.get("name") else (" ".join(handle_words) if handle_words else "LinkedIn Professional")
 
+    is_live_scraped = live_profile.get("success", False) and bool(live_profile.get("headline"))
+    
     if req.headline and req.headline.strip():
         headline_text = req.headline.strip()
-    elif live_profile.get("success") and live_profile.get("headline"):
+    elif is_live_scraped:
         headline_text = live_profile["headline"]
     else:
-        headline_text = f"Software & AI Technology Professional ({derived_name})"
+        headline_text = "Protected by LinkedIn Auth Wall (Paste text below for full audit)"
 
     if req.summary_text and req.summary_text.strip():
         summary_text_val = req.summary_text.strip()
-    elif live_profile.get("success") and live_profile.get("summary"):
+    elif is_live_scraped and live_profile.get("summary"):
         summary_text_val = live_profile["summary"]
     else:
-        summary_text_val = f"Experienced technology professional ({derived_name}) specializing in software development, architecture, and tech execution."
+        summary_text_val = "Profile text protected. Add custom bio/summary in settings to audit."
 
     summary_words = len(summary_text_val.split()) if summary_text_val else 0
     certs_text = req.certifications.strip() if req.certifications and req.certifications.strip() else "None provided (Optional)"
