@@ -59,7 +59,7 @@ function getApiBaseUrl() {
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     if (isLocal) return '';
     const stored = localStorage.getItem('render_backend_url');
-    return stored ? stored.replace(/\/$/, '') : 'https://ai-career-mentor-backend.onrender.com';
+    return stored ? stored.replace(/\/$/, '') : 'https://ai-career-mentor-3z0j.onrender.com';
 }
 
 // Fetch Dynamic Dropdowns from FastAPI
