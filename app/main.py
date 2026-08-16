@@ -333,30 +333,41 @@ def review_github_live(req: GitHubLiveRequest):
     if "error" in gh_data:
         return JSONResponse(status_code=400, content=gh_data)
 
-    # Check Gemini AI Audit
-    if req.api_key or os.environ.get("GEMINI_API_KEY"):
+    # Check OpenRouter / Gemini AI Audit
+    if req.api_key or os.environ.get("OPENROUTER_API_KEY") or os.environ.get("GEMINI_API_KEY"):
         ai_res = ai_service.review_github_profile(gh_data, req.api_key)
         if ai_res:
-            ai_res["source"] = "Gemini AI Engine"
+            ai_res["source"] = "Live GitHub API + AI Code Architect"
             ai_res["raw_metrics"] = gh_data
             return ai_res
 
-    # Fallback to local scoring
+    # Query local dataset for reference baseline
+    df = data_loader.datasets.get('github')
+    sample_row = df.iloc[0] if df is not None and not df.empty else None
+
     repos = gh_data.get('public_repos', 0)
     stars = gh_data.get('total_stars', 0)
     followers = gh_data.get('followers', 0)
+    top_langs = gh_data.get('top_languages', [])
 
-    score = min(100, max(25, int(repos * 2.5 + stars * 1.5 + followers * 2.0)))
-    rating = "Outstanding Developer" if score >= 85 else ("Solid Developer" if score >= 65 else "Building Portfolio")
+    score = min(99, max(35, int(35 + min(repos, 30) * 1.5 + min(stars, 50) * 0.8 + min(followers, 50) * 0.6)))
+    tier = "Senior Open-Source Engineer" if score >= 85 else ("Solid Active Developer" if score >= 65 else "Building Portfolio")
+    grade = "A+" if score >= 90 else ("A" if score >= 75 else ("B+" if score >= 60 else "B"))
+
+    strengths = f"Active GitHub contributor with {repos} public repositories, {stars} total stars, and {followers} followers. Dominant languages: {', '.join(top_langs[:3]) if top_langs else 'Software Engineering'}."
+    weaknesses = str(sample_row.get('weaknesses', 'Could add more detailed README documentation and release tags to top repositories.')) if sample_row is not None else "Add detailed README documentation."
+    tips = str(sample_row.get('improvement_suggestions', 'Pin top 4 projects, attach live web app demo URLs, and write clear commit logs.')) if sample_row is not None else "Pin top projects with demo links."
 
     return {
         "source": "Live GitHub API + Dataset Rules",
         "raw_metrics": gh_data,
-        "profile_score": score,
-        "review_rating": rating,
-        "strengths": f"Active GitHub user with {repos} public repos, {stars} total stars, and {followers} followers.",
-        "weaknesses": "Can increase open-source contributions and maintain comprehensive README.md files.",
-        "improvement_suggestions": "Pin top 4 repositories, add live demo links in repository About sections, and write descriptive commit messages."
+        "developer_score": score,
+        "developer_tier": tier,
+        "code_quality_grade": grade,
+        "strengths": strengths,
+        "weaknesses": weaknesses,
+        "improvement_suggestions": tips,
+        "top_technologies": top_langs if top_langs else ["Git", "Software Development"]
     }
 
 # --- 8. LinkedIn Review Endpoint ---

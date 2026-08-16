@@ -568,34 +568,58 @@ function initForms() {
         }
 
         const metrics = data.raw_metrics || {};
+        const devScore = data.developer_score || data.profile_score || 75;
+        const devTier = data.developer_tier || data.review_rating || 'Active Contributor';
+        const codeGrade = data.code_quality_grade || 'A';
+        const topTechs = data.top_technologies || metrics.top_languages || [];
+
         box.innerHTML = `
-            <div style="font-size: 11px; color: var(--accent); margin-bottom: 6px;">Evaluated via: ${data.source || 'Live API'}</div>
-            <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 15px;">
-                ${metrics.avatar_url ? `<img src="${metrics.avatar_url}" style="width: 50px; height: 50px; border-radius: 50%;">` : ''}
+            <div style="font-size: 11px; color: var(--accent); margin-bottom: 8px;">Evaluated via: ${data.source || 'Live GitHub API'}</div>
+            <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 15px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;">
+                ${metrics.avatar_url ? `<img src="${metrics.avatar_url}" style="width: 54px; height: 54px; border-radius: 50%; border: 2px solid var(--accent);">` : ''}
                 <div>
-                    <h3 style="color: #fff;">${metrics.full_name || metrics.github_username}</h3>
-                    <div style="font-size: 12px; color: var(--text-muted);">@${metrics.github_username}</div>
+                    <h3 style="color: #fff; margin-bottom: 2px;">${metrics.full_name || metrics.github_username}</h3>
+                    <div style="font-size: 13px; color: var(--text-muted);"><i class="fa-brands fa-github"></i> @${metrics.github_username}</div>
+                    ${metrics.bio ? `<div style="font-size: 12px; color: var(--text-bright); margin-top: 4px;">"${metrics.bio}"</div>` : ''}
                 </div>
             </div>
-            <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 15px;">
+
+            <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 16px;">
                 <div>
-                    <div style="font-size: 12px; color: var(--text-muted);">Portfolio Score</div>
-                    <div class="score-badge">${data.profile_score}%</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">Developer Score</div>
+                    <div class="score-badge" style="font-size: 28px;">${devScore} <span style="font-size:14px; color:var(--text-muted);">/ 100</span></div>
                 </div>
                 <div>
-                    <div style="font-size: 12px; color: var(--text-muted);">Tier</div>
-                    <div style="font-size: 18px; font-weight: 700; color: var(--secondary);">${data.review_rating}</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">Code Grade</div>
+                    <div style="font-size: 24px; font-weight: 800; color: #6ee7b7;">${codeGrade}</div>
+                </div>
+                <div>
+                    <div style="font-size: 11px; color: var(--text-muted);">Developer Tier</div>
+                    <div style="font-size: 15px; font-weight: 700; color: var(--secondary);">${devTier}</div>
                 </div>
             </div>
-            <div class="tag-list" style="margin-bottom: 12px;">
-                <span class="tag">Repos: ${metrics.public_repos}</span>
-                <span class="tag">Stars: ${metrics.total_stars}</span>
-                <span class="tag">Followers: ${metrics.followers}</span>
-                <span class="tag">Top Repo: ${metrics.top_repository}</span>
+
+            <div class="tag-list" style="margin-bottom: 14px;">
+                <span class="tag" style="background: rgba(46,164,79,0.2); color:#6ee7b7;"><i class="fa-solid fa-code-fork"></i> Repos: ${metrics.public_repos}</span>
+                <span class="tag" style="background: rgba(245,158,11,0.2); color:#fcd34d;"><i class="fa-solid fa-star"></i> Stars: ${metrics.total_stars}</span>
+                <span class="tag" style="background: rgba(99,102,241,0.2); color:#a5b4fc;"><i class="fa-solid fa-users"></i> Followers: ${metrics.followers}</span>
+                <span class="tag" style="background: rgba(6,182,212,0.2); color:#67e8f9;"><i class="fa-solid fa-fire"></i> Top Repo: ${metrics.top_repository}</span>
             </div>
-            <p style="font-size: 13px; margin-bottom: 8px;"><strong>Strengths:</strong> ${data.strengths}</p>
-            <p style="font-size: 13px; color: #fca5a5; margin-bottom: 8px;"><strong>Weaknesses:</strong> ${data.weaknesses}</p>
-            <p style="font-size: 13px; color: var(--text-muted);"><strong>Action Plan:</strong> ${data.improvement_suggestions}</p>
+
+            ${topTechs.length ? `
+                <div style="margin-bottom: 12px;">
+                    <span style="font-size: 12px; color: var(--text-muted);">Detected Technologies:</span>
+                    <div class="tag-list" style="margin-top: 4px;">
+                        ${topTechs.map(t => `<span class="tag" style="background: rgba(255,255,255,0.06); color:#fff;">${t}</span>`).join('')}
+                    </div>
+                </div>
+            ` : ''}
+
+            <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; font-size: 13px; line-height: 1.6;">
+                <p style="margin-bottom: 8px; color: #6ee7b7;"><strong><i class="fa-solid fa-circle-check"></i> Strengths:</strong> ${data.strengths}</p>
+                <p style="margin-bottom: 8px; color: #fca5a5;"><strong><i class="fa-solid fa-circle-exclamation"></i> Gaps & Weaknesses:</strong> ${data.weaknesses}</p>
+                <p style="color: var(--text-bright);"><strong><i class="fa-solid fa-lightbulb" style="color:var(--warning);"></i> Actionable Growth Roadmap:</strong> ${data.improvement_suggestions}</p>
+            </div>
         `;
     });
 }

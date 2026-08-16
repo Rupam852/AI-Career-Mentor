@@ -91,17 +91,19 @@ class AIService:
 
     def review_github_profile(self, github_data: dict, api_key: str = None):
         prompt = f"""
-        You are a Technical Recruiter auditing a software engineer's GitHub profile.
+        You are a Principal Software Architect and Senior Technical Recruiter auditing a developer's GitHub profile.
         
-        GitHub Profile Data:
+        Live GitHub Profile Data:
         {json.dumps(github_data, indent=2)}
 
         Provide a JSON response with exact keys:
-        - "profile_score": Integer (0-100)
-        - "review_rating": String ("Foundational", "Active Contributor", "Outstanding Developer")
-        - "strengths": String highlighting repository quality or activity
-        - "weaknesses": String pointing out profile gaps
-        - "improvement_suggestions": String with 2-3 actionable recommendations
+        - "developer_score": Integer (0-100)
+        - "developer_tier": String (e.g. "Senior Open Source Contributor", "Solid Full-Stack Engineer", "Active Developer", "Junior Developer")
+        - "code_quality_grade": String ("A+", "A", "B+", "B", "C")
+        - "strengths": String highlighting repository diversity, stars, followers, and language expertise
+        - "weaknesses": String pointing out profile gaps (missing project documentation, low star count, sparse activity)
+        - "improvement_suggestions": String with 3 specific, high-impact recommendations to elevate this GitHub portfolio
+        - "top_technologies": List of primary programming languages or tools detected
         """
         return self._call_openrouter_chain(prompt, api_key)
 
