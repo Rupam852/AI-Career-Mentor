@@ -9,5 +9,5 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
-      - key: GEMINI_API_KEY
+      - key: OPENROUTER_API_KEY
         sync: false
