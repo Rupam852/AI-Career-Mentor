@@ -268,29 +268,93 @@ async def upload_resume(file: UploadFile = File(...), target_job_title: str = Fo
 # --- 6. Interview Prep & Answer Evaluator ---
 class InterviewRequest(BaseModel):
     job_title: str
+    category: Optional[str] = "All Categories"
     industry: Optional[str] = "Information Technology"
+    api_key: Optional[str] = None
 
 @app.post("/api/interview-prep")
 def get_interview_questions(req: InterviewRequest):
+    # 1. Try OpenRouter AI Question Generator first
+    if req.api_key or os.environ.get("OPENROUTER_API_KEY") or os.environ.get("GEMINI_API_KEY"):
+        prompt = f"""
+        Generate a comprehensive 10-question interview question bank for the target job role: "{req.job_title}".
+        Selected Category Filter: "{req.category}".
+
+        Include a diverse mix of 10 real-world industry interview questions across:
+        1. LeetCode DSA & Algorithm Coding Challenges
+        2. System Design & Scalable Distributed Architecture
+        3. Core Technical & Framework Deep Dives
+        4. Behavioral STAR Method Leadership Scenarios
+
+        Return a JSON response with exact key "questions" containing an array of 10 objects:
+        [
+          {{
+            "question_id": 1,
+            "question_type": "LeetCode Coding" or "System Design" or "Technical Deep Dive" or "Behavioral STAR",
+            "difficulty_level": "Hard" or "Medium" or "Easy",
+            "question_text": "Clear, detailed question text...",
+            "key_evaluation_points": "Key concepts candidate should cover...",
+            "ideal_answer_length_words": 150
+          }}
+        ]
+        """
+        ai_res = ai_service._call_openrouter_chain(prompt, req.api_key)
+        if ai_res and isinstance(ai_res.get("questions"), list) and len(ai_res["questions"]) > 0:
+            return {"job_title": req.job_title, "category": req.category, "questions": ai_res["questions"]}
+
+    # 2. Dataset + Baseline Question Engine Fallback
     df = data_loader.datasets.get('interview')
     questions = []
-    if df is not None:
+    if df is not None and not df.empty:
         matches = df[df['job_title'].astype(str).str.lower().str.contains(req.job_title.lower(), na=False)]
         if matches.empty:
-            matches = df.sample(min(5, len(df)))
+            matches = df.sample(min(8, len(df)))
         else:
-            matches = matches.head(5)
+            matches = matches.head(8)
 
-        for _, row in matches.iterrows():
+        for idx, row in matches.iterrows():
             questions.append({
-                "question_id": int(row.get('question_id', 1)),
+                "question_id": len(questions) + 1,
                 "question_type": str(row.get('question_type', 'Technical')),
                 "difficulty_level": str(row.get('difficulty_level', 'Medium')),
                 "question_text": str(row.get('question_text', '')),
-                "key_evaluation_points": str(row.get('key_evaluation_points', '')),
-                "ideal_answer_length_words": int(row.get('ideal_answer_length_words', 100))
+                "key_evaluation_points": str(row.get('key_evaluation_points', 'Core domain concepts and problem-solving approach.')),
+                "ideal_answer_length_words": int(row.get('ideal_answer_length_words', 120))
             })
-    return {"job_title": req.job_title, "questions": questions}
+
+    # Supplementary LeetCode / System Design fallback questions if fewer than 8
+    supplementary = [
+        {
+            "question_id": len(questions) + 1,
+            "question_type": "LeetCode Coding",
+            "difficulty_level": "Medium",
+            "question_text": f"How would you optimize time and space complexity for a data processing pipeline in {req.job_title}?",
+            "key_evaluation_points": "Big-O time complexity, space trade-offs, caching, vectorization.",
+            "ideal_answer_length_words": 120
+        },
+        {
+            "question_id": len(questions) + 2,
+            "question_type": "System Design",
+            "difficulty_level": "Hard",
+            "question_text": f"Design a high-throughput, low-latency microservice architecture for {req.job_title} tasks.",
+            "key_evaluation_points": "Load balancing, database sharding, caching, API gateways, fault tolerance.",
+            "ideal_answer_length_words": 150
+        },
+        {
+            "question_id": len(questions) + 3,
+            "question_type": "Behavioral STAR",
+            "difficulty_level": "Medium",
+            "question_text": "Describe a critical production bug or system failure you resolved under tight deadline pressures.",
+            "key_evaluation_points": "STAR framework (Situation, Task, Action, Result), root cause analysis, resilience.",
+            "ideal_answer_length_words": 130
+        }
+    ]
+
+    for q in supplementary:
+        if len(questions) < 10:
+            questions.append(q)
+
+    return {"job_title": req.job_title, "category": req.category, "questions": questions}
 
 class AnswerEvaluationRequest(BaseModel):
     job_title: str

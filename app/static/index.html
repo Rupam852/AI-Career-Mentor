@@ -328,7 +328,17 @@
                                 <label>Target Job Title</label>
                                 <select class="form-control" id="int-role"></select>
                             </div>
-                            <button type="submit" class="btn-primary"><i class="fa-solid fa-circle-play"></i> Fetch Question Set</button>
+                            <div class="form-group">
+                                <label><i class="fa-solid fa-filter" style="color: var(--accent);"></i> Question Category Filter</label>
+                                <select class="form-control" id="int-category">
+                                    <option value="All Categories">All Types (LeetCode Coding, System Design, Tech & STAR)</option>
+                                    <option value="LeetCode & Coding DSA">LeetCode & Data Structures / Algorithms</option>
+                                    <option value="System Design & Architecture">System Design & Distributed Architecture</option>
+                                    <option value="Technical Domain Deep Dive">Technical & Framework Deep Dive</option>
+                                    <option value="Behavioral & Leadership">Behavioral STAR & Leadership Scenarios</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-primary"><i class="fa-solid fa-circle-play"></i> Fetch 10+ AI Question Bank</button>
                         </form>
 
                         <!-- Answer Evaluator Box -->

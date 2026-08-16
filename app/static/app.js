@@ -503,9 +503,11 @@ function initForms() {
         const btn = interviewForm.querySelector('button[type="submit"]');
         const box = document.getElementById('interview-result');
 
-        await withLoadingState(btn, box, 'Fetching Interview Questions...', async () => {
+        await withLoadingState(btn, box, 'Fetching 10+ AI Interview Question Bank...', async () => {
             const payload = {
-                job_title: document.getElementById('int-role').value
+                job_title: document.getElementById('int-role').value,
+                category: document.getElementById('int-category') ? document.getElementById('int-category').value : 'All Categories',
+                api_key: getApiKey()
             };
 
             const res = await fetch(`${getApiBaseUrl()}/api/interview-prep`, {
@@ -515,14 +517,18 @@ function initForms() {
             });
             const data = await res.json();
 
-            box.innerHTML = data.questions.map((q, idx) => `
-                <div style="margin-bottom: 16px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border-left: 3px solid var(--secondary); cursor: pointer;" onclick="selectQuestionForPractice('${q.question_text.replace(/'/g, "\\'")}')">
-                    <div style="font-size: 12px; color: var(--text-muted); display:flex; justify-content:space-between;">
-                        <span>Q${idx+1} [${q.question_type} - ${q.difficulty_level}]</span>
-                        <span style="color: var(--accent);"><i class="fa-solid fa-hand-pointer"></i> Practice This</span>
+            box.innerHTML = `
+                <div style="font-size: 12px; color: var(--accent); margin-bottom: 12px; font-weight: 600;">
+                    <i class="fa-solid fa-list-check"></i> Showing ${data.questions.length} Interview & LeetCode Questions for <span style="color:#fff;">"${data.job_title}"</span>
+                </div>
+            ` + data.questions.map((q, idx) => `
+                <div style="margin-bottom: 14px; padding: 12px 14px; background: rgba(255,255,255,0.03); border-radius: 8px; border-left: 4px solid ${q.question_type.includes('LeetCode') ? '#f59e0b' : (q.question_type.includes('System') ? '#6366f1' : 'var(--secondary)')}; cursor: pointer;" onclick="selectQuestionForPractice('${q.question_text.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')">
+                    <div style="font-size: 11px; color: var(--text-muted); display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+                        <span class="tag" style="background: rgba(255,255,255,0.06); font-size:11px; padding: 2px 8px;">Q${idx+1}: ${q.question_type} • <strong style="color:${q.difficulty_level === 'Hard' ? '#fca5a5' : '#6ee7b7'};">${q.difficulty_level}</strong></span>
+                        <span style="color: var(--accent); font-weight: 600;"><i class="fa-solid fa-hand-pointer"></i> Practice This Question</span>
                     </div>
-                    <div style="font-size: 14px; font-weight: 600; color: #fff; margin: 6px 0;">${q.question_text}</div>
-                    <div style="font-size: 12px; color: var(--text-muted);">Key Evaluation: ${q.key_evaluation_points}</div>
+                    <div style="font-size: 14px; font-weight: 600; color: #fff; margin: 6px 0; line-height: 1.4;">${q.question_text}</div>
+                    <div style="font-size: 12px; color: var(--text-muted);"><strong>Key Concepts:</strong> ${q.key_evaluation_points}</div>
                 </div>
             `).join('');
 
