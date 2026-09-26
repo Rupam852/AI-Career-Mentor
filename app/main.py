@@ -43,6 +43,15 @@ def read_root():
 def get_options():
     return data_loader.get_unique_options()
 
+@app.get("/api/health")
+def health_check():
+    return {
+        "status": "online",
+        "models_ready": True,
+        "datasets_count": 8,
+        "message": "AI Career Mentor Backend Engine is fully operational."
+    }
+
 # --- 1. Salary Prediction Endpoint ---
 class SalaryRequest(BaseModel):
     industry: str

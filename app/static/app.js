@@ -1,11 +1,75 @@
 document.addEventListener('DOMContentLoaded', () => {
+    initThemeHandling();
     initApiKeyHandling();
     initNavigation();
-    loadDropdownOptions();
+    initServerHealthCheck();
     initOverviewChart();
     initForms();
     initResumeUploadDropzone();
 });
+
+// Theme Management (Default: Light Mode, switchable to Dark Mode)
+function initThemeHandling() {
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    const mobileThemeToggleBtn = document.getElementById('mobile-theme-toggle-btn');
+    const themeBtnLabel = document.getElementById('theme-btn-label');
+
+    function getTheme() {
+        return localStorage.getItem('theme') || 'light';
+    }
+
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        if (themeBtnLabel) {
+            themeBtnLabel.innerText = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+        }
+        updateChartsTheme(theme);
+    }
+
+    // Default to 'light' if not previously set by user
+    const currentTheme = getTheme();
+    applyTheme(currentTheme);
+
+    const toggleTheme = () => {
+        const nextTheme = getTheme() === 'dark' ? 'light' : 'dark';
+        applyTheme(nextTheme);
+    };
+
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', toggleTheme);
+    }
+    if (mobileThemeToggleBtn) {
+        mobileThemeToggleBtn.addEventListener('click', toggleTheme);
+    }
+}
+
+function updateChartsTheme(theme) {
+    const textColor = theme === 'dark' ? '#9ca3af' : '#64748b';
+    const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)';
+
+    if (overviewChartInstance && overviewChartInstance.options) {
+        if (overviewChartInstance.options.plugins?.legend?.labels) {
+            overviewChartInstance.options.plugins.legend.labels.color = textColor;
+        }
+        overviewChartInstance.update();
+    }
+
+    if (salaryChartInstance && salaryChartInstance.options) {
+        if (salaryChartInstance.options.plugins?.legend?.labels) {
+            salaryChartInstance.options.plugins.legend.labels.color = textColor;
+        }
+        if (salaryChartInstance.options.scales?.x) {
+            if (salaryChartInstance.options.scales.x.ticks) salaryChartInstance.options.scales.x.ticks.color = textColor;
+            if (salaryChartInstance.options.scales.x.grid) salaryChartInstance.options.scales.x.grid.color = gridColor;
+        }
+        if (salaryChartInstance.options.scales?.y) {
+            if (salaryChartInstance.options.scales.y.ticks) salaryChartInstance.options.scales.y.ticks.color = textColor;
+            if (salaryChartInstance.options.scales.y.grid) salaryChartInstance.options.scales.y.grid.color = gridColor;
+        }
+        salaryChartInstance.update();
+    }
+}
 
 // Manage API Key in LocalStorage & UI
 function getApiKey() {
@@ -74,21 +138,146 @@ function getApiBaseUrl() {
     return stored ? stored.replace(/\/$/, '') : 'https://ai-career-mentor-3z0j.onrender.com';
 }
 
-// Fetch Dynamic Dropdowns from FastAPI
+// ==========================================================================
+// Backend Server Health Check & Sleep-Mode Cold Start Wakeup Engine
+// ==========================================================================
+let serverCheckAttempts = 0;
+let serverCheckTimer = null;
+let serverProgressPercent = 18;
+let isBackendOnline = false;
+
+function initServerHealthCheck() {
+    const modal = document.getElementById('server-status-modal');
+    if (!modal) return;
+
+    // Show wakeup modal if server doesn't respond within 1.2s (e.g. cold start)
+    const wakeupPopupTimer = setTimeout(() => {
+        if (!isBackendOnline) {
+            modal.style.display = 'flex';
+        }
+    }, 1200);
+
+    performServerPing(wakeupPopupTimer);
+}
+
+async function performServerPing(popupTimer) {
+    serverCheckAttempts++;
+    const attemptText = document.getElementById('server-attempt-text');
+    const progressFill = document.getElementById('server-progress-fill');
+    
+    if (attemptText) {
+        attemptText.innerText = `Pinging backend server... (Attempt ${serverCheckAttempts})`;
+    }
+    
+    // Simulate progressive filling while server boots up
+    serverProgressPercent = Math.min(94, serverProgressPercent + 14);
+    if (progressFill) {
+        progressFill.style.width = `${serverProgressPercent}%`;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 7500); // 7.5s abort per attempt
+
+    try {
+        const res = await fetch(`${getApiBaseUrl()}/api/options`, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        
+        if (res.ok) {
+            const data = await res.json();
+            populateAllDropdowns(data);
+            handleServerReady(true, popupTimer);
+            return;
+        } else {
+            throw new Error(`Server returned ${res.status}`);
+        }
+    } catch (err) {
+        clearTimeout(timeoutId);
+        console.log(`Backend is starting/sleeping... Ping #${serverCheckAttempts}`);
+        // Ensure modal is displayed when delay/error occurs
+        const modal = document.getElementById('server-status-modal');
+        if (modal) modal.style.display = 'flex';
+        
+        // Retry every 3.5 seconds
+        serverCheckTimer = setTimeout(() => performServerPing(popupTimer), 3500);
+    }
+}
+
+function handleServerReady(wasAwoken, popupTimer) {
+    clearTimeout(serverCheckTimer);
+    if (popupTimer) clearTimeout(popupTimer);
+    isBackendOnline = true;
+
+    const modal = document.getElementById('server-status-modal');
+    const loadingState = document.getElementById('server-state-loading');
+    const readyState = document.getElementById('server-state-ready');
+    const progressFill = document.getElementById('server-progress-fill');
+
+    if (progressFill) {
+        progressFill.style.width = '100%';
+    }
+
+    // Update Header Pill to Online
+    updateNavbarServerStatus(true);
+
+    // Switch Modal to Success State
+    if (loadingState && readyState) {
+        loadingState.style.display = 'none';
+        readyState.style.display = 'block';
+    }
+
+    // If modal was not yet displayed (e.g. backend was already awake and responded in < 1.2s)
+    if (modal && modal.style.display === 'none') {
+        if (sessionStorage.getItem('server_modal_closed') !== 'true') {
+            modal.style.display = 'flex';
+        }
+    }
+}
+
+function closeServerModal() {
+    const modal = document.getElementById('server-status-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    sessionStorage.setItem('server_modal_closed', 'true');
+}
+
+function updateNavbarServerStatus(online) {
+    const statsBar = document.querySelector('.stats-bar');
+    if (!statsBar) return;
+    let pill = document.getElementById('server-status-pill');
+    if (!pill) {
+        pill = document.createElement('div');
+        pill.id = 'server-status-pill';
+        pill.className = 'stat-pill';
+        statsBar.appendChild(pill);
+    }
+    if (online) {
+        pill.style.borderColor = 'rgba(52, 211, 153, 0.4)';
+        pill.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #34d399;"></i> Server: <span style="color: #6ee7b7; font-weight:700;">Online & Ready</span>';
+    } else {
+        pill.style.borderColor = 'rgba(251, 191, 36, 0.4)';
+        pill.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="color: #fbbf24;"></i> Server: <span style="color: #fbbf24;">Waking Up...</span>';
+    }
+}
+
+function populateAllDropdowns(data) {
+    if (!data) return;
+    populateSelect('sal-industry', data.industries);
+    populateSelect('sal-jobtitle', data.job_titles);
+    populateSelect('sal-edu', data.education_levels);
+    populateSelect('car-edu', data.education_levels);
+    populateSelect('sg-target', data.target_roles);
+    populateSelect('rm-target', data.target_roles);
+    populateSelect('int-role', data.job_titles);
+}
+
+// Fallback manual loader if needed
 async function loadDropdownOptions() {
+    if (isBackendOnline) return;
     try {
         const res = await fetch(`${getApiBaseUrl()}/api/options`);
         const data = await res.json();
-
-        populateSelect('sal-industry', data.industries);
-        populateSelect('sal-jobtitle', data.job_titles);
-        populateSelect('sal-edu', data.education_levels);
-        
-        populateSelect('car-edu', data.education_levels);
-        populateSelect('sg-target', data.target_roles);
-        populateSelect('rm-target', data.target_roles);
-        populateSelect('int-role', data.job_titles);
-
+        populateAllDropdowns(data);
     } catch (err) {
         console.error('Failed to load options:', err);
     }
@@ -206,6 +395,9 @@ let overviewChartInstance = null;
 function initOverviewChart() {
     const ctx = document.getElementById('overviewChart');
     if (!ctx) return;
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    const textColor = currentTheme === 'dark' ? '#9ca3af' : '#64748b';
+
     overviewChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -219,7 +411,7 @@ function initOverviewChart() {
         options: {
             responsive: true,
             plugins: {
-                legend: { position: 'right', labels: { color: '#9ca3af' } }
+                legend: { position: 'right', labels: { color: textColor } }
             }
         }
     });
@@ -295,6 +487,10 @@ function initForms() {
             const predLakhs = (data.predicted_salary_inr / 100000).toFixed(2);
             const maxLakhs = (data.max_salary_inr / 100000).toFixed(2);
 
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            const chartTextColor = currentTheme === 'dark' ? '#9ca3af' : '#64748b';
+            const chartGridColor = currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)';
+
             const sCtx = document.getElementById('salaryChart');
             if (salaryChartInstance) salaryChartInstance.destroy();
             salaryChartInstance = new Chart(sCtx, {
@@ -309,10 +505,16 @@ function initForms() {
                     }]
                 },
                 options: {
-                    plugins: { legend: { display: true, labels: { color: '#9ca3af' } } },
+                    plugins: { legend: { display: true, labels: { color: chartTextColor } } },
                     scales: {
-                        y: { ticks: { color: '#9ca3af', callback: (val) => '₹' + val + ' L' } },
-                        x: { ticks: { color: '#9ca3af' } }
+                        y: { 
+                            ticks: { color: chartTextColor, callback: (val) => '₹' + val + ' L' },
+                            grid: { color: chartGridColor }
+                        },
+                        x: { 
+                            ticks: { color: chartTextColor },
+                            grid: { color: chartGridColor }
+                        }
                     }
                 }
             });
@@ -345,10 +547,10 @@ function initForms() {
             box.innerHTML = '';
             data.all_matches.forEach((item, idx) => {
                 box.innerHTML += `
-                    <div style="margin-bottom: 16px; padding: 14px; background: rgba(255,255,255,0.03); border-radius: 8px; border-left: 3px solid var(--primary);">
+                    <div style="margin-bottom: 16px; padding: 14px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; border-left: 3px solid var(--primary);">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <h4 style="color: #fff;">#${idx+1} ${item.career_title}</h4>
-                            <span class="tag" style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7;">${item.match_score}% Match</span>
+                            <h4 style="color: var(--text-bright);">#${idx+1} ${item.career_title}</h4>
+                            <span class="tag" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">${item.match_score}% Match</span>
                         </div>
                         <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">${item.reasoning}</p>
                         <div style="font-size: 12px; color: var(--secondary); margin-top: 6px;">Alternative: ${item.alternative_recommendation}</div>
@@ -396,7 +598,7 @@ function initForms() {
                         ${data.missing_skills.map(s => `<span class="tag tag-danger">${s}</span>`).join('')}
                     </div>
                 </div>
-                <div style="font-size: 13px; color: var(--text-main); background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px;">
+                <div style="font-size: 13px; color: var(--text-main); background: var(--bg-card); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px;">
                     <strong>Recommended Learning Strategy:</strong><br>${data.recommended_resources}
                 </div>
             `;
@@ -426,7 +628,7 @@ function initForms() {
             const data = await res.json();
 
             const phasesHtml = (data.phases || []).map((p, idx) => `
-                <div class="timeline-step" style="background: rgba(255,255,255,0.02); padding: 14px; border-radius: 8px; margin-bottom: 16px;">
+                <div class="timeline-step" style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 14px; border-radius: 8px; margin-bottom: 16px;">
                     <div style="font-size: 15px; font-weight: 700; color: var(--secondary);">${p.phase_name || 'Phase ' + (idx+1)}</div>
                     <div style="font-size: 13px; color: var(--text-muted); margin: 6px 0;">${p.description || ''}</div>
                     
@@ -446,7 +648,7 @@ function initForms() {
                     ` : ''}
 
                     ${p.project_idea ? `
-                        <div style="font-size: 12px; color: #a5b4fc; background: rgba(99,102,241,0.1); padding: 8px; border-radius: 6px; margin-top: 8px;">
+                        <div style="font-size: 12px; color: var(--primary); background: var(--tag-bg); padding: 8px; border-radius: 6px; margin-top: 8px; border: 1px solid var(--tag-border);">
                             <i class="fa-solid fa-laptop-code"></i> <strong>Portfolio Project:</strong> ${p.project_idea}
                         </div>
                     ` : ''}
@@ -460,16 +662,16 @@ function initForms() {
             box.innerHTML = `
                 <div style="font-size: 11px; color: var(--accent); margin-bottom: 8px;">Generated via: ${data.source || 'AI Mentor'}</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
-                    <span class="tag" style="background: rgba(99, 102, 241, 0.2); color: #a5b4fc; font-size: 13px;"><i class="fa-solid fa-clock"></i> Duration: ${data.total_duration_months} Months</span>
-                    <span class="tag" style="background: rgba(6, 182, 212, 0.2); color: #67e8f9; font-size: 13px;"><i class="fa-solid fa-certificate"></i> Certification: ${data.target_certification}</span>
-                    <span class="tag" style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; font-size: 13px;"><i class="fa-solid fa-signal"></i> Level: ${data.difficulty_level}</span>
+                    <span class="tag" style="background: rgba(99, 102, 241, 0.2); color: var(--primary); font-size: 13px;"><i class="fa-solid fa-clock"></i> Duration: ${data.total_duration_months} Months</span>
+                    <span class="tag" style="background: rgba(6, 182, 212, 0.2); color: var(--secondary); font-size: 13px;"><i class="fa-solid fa-certificate"></i> Certification: ${data.target_certification}</span>
+                    <span class="tag" style="background: rgba(16, 185, 129, 0.2); color: var(--accent); font-size: 13px;"><i class="fa-solid fa-signal"></i> Level: ${data.difficulty_level}</span>
                 </div>
                 
-                <h4 style="color: #fff; margin-bottom: 12px;"><i class="fa-solid fa-route"></i> Actionable Learning Phases</h4>
+                <h4 style="color: var(--text-bright); margin-bottom: 12px;"><i class="fa-solid fa-route"></i> Actionable Learning Phases</h4>
                 ${phasesHtml}
 
                 ${milestonesHtml ? `
-                    <div style="margin-top: 16px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                    <div style="margin-top: 16px; padding: 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px;">
                         <h5 style="color: var(--warning); font-size: 13px; margin-bottom: 8px;">Key Target Milestones:</h5>
                         <ul style="list-style: none;">${milestonesHtml}</ul>
                     </div>
@@ -531,15 +733,15 @@ function initForms() {
 
             box.innerHTML = `
                 <div style="font-size: 12px; color: var(--accent); margin-bottom: 12px; font-weight: 600;">
-                    <i class="fa-solid fa-list-check"></i> Showing ${data.questions.length} Interview & LeetCode Questions for <span style="color:#fff;">"${data.job_title}"</span>
+                    <i class="fa-solid fa-list-check"></i> Showing ${data.questions.length} Interview & LeetCode Questions for <span style="color:var(--text-bright);">"${data.job_title}"</span>
                 </div>
             ` + data.questions.map((q, idx) => `
-                <div style="margin-bottom: 14px; padding: 12px 14px; background: rgba(255,255,255,0.03); border-radius: 8px; border-left: 4px solid ${q.question_type.includes('LeetCode') ? '#f59e0b' : (q.question_type.includes('System') ? '#6366f1' : 'var(--secondary)')}; cursor: pointer;" onclick="selectQuestionForPractice('${q.question_text.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')">
+                <div style="margin-bottom: 14px; padding: 12px 14px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; border-left: 4px solid ${q.question_type.includes('LeetCode') ? '#f59e0b' : (q.question_type.includes('System') ? '#6366f1' : 'var(--secondary)')}; cursor: pointer;" onclick="selectQuestionForPractice('${q.question_text.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')">
                     <div style="font-size: 11px; color: var(--text-muted); display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
-                        <span class="tag" style="background: rgba(255,255,255,0.06); font-size:11px; padding: 2px 8px;">Q${idx+1}: ${q.question_type} • <strong style="color:${q.difficulty_level === 'Hard' ? '#fca5a5' : '#6ee7b7'};">${q.difficulty_level}</strong></span>
+                        <span class="tag" style="font-size:11px; padding: 2px 8px;">Q${idx+1}: ${q.question_type} • <strong style="color:${q.difficulty_level === 'Hard' ? '#ef4444' : '#10b981'};">${q.difficulty_level}</strong></span>
                         <span style="color: var(--accent); font-weight: 600;"><i class="fa-solid fa-hand-pointer"></i> Practice This Question</span>
                     </div>
-                    <div style="font-size: 14px; font-weight: 600; color: #fff; margin: 6px 0; line-height: 1.4;">${q.question_text}</div>
+                    <div style="font-size: 14px; font-weight: 600; color: var(--text-bright); margin: 6px 0; line-height: 1.4;">${q.question_text}</div>
                     <div style="font-size: 12px; color: var(--text-muted);"><strong>Key Concepts:</strong> ${q.key_evaluation_points}</div>
                 </div>
             `).join('');
@@ -652,16 +854,16 @@ function initForms() {
                     <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 10px;">
                         ${data.avatar_url ? `<img src="${data.avatar_url}" style="width: 48px; height: 48px; border-radius: 50%; border: 2px solid #0077b5;">` : ''}
                         <div>
-                            <div style="font-size: 15px; font-weight: 700; color: #fff;">${data.full_name || data.linkedin_handle}</div>
+                            <div style="font-size: 15px; font-weight: 700; color: var(--text-bright);">${data.full_name || data.linkedin_handle}</div>
                             <div style="font-size: 12px; color: var(--secondary);"><i class="fa-brands fa-linkedin" style="color:#0077b5;"></i> @${data.linkedin_handle}</div>
                         </div>
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; line-height: 1.5;">
                         <div style="color: var(--text-bright);"><strong>Scraped Headline:</strong> "${headline}"</div>
                         <div style="color: var(--text-muted);"><strong>Bio Summary Depth:</strong> ${summaryWords} words analyzed</div>
-                        <div style="color: #fcd34d;"><strong><i class="fa-solid fa-certificate"></i> Certifications:</strong> ${certs}</div>
-                        <div style="color: #67e8f9;"><strong><i class="fa-solid fa-diagram-project"></i> Featured Projects:</strong> ${projects}</div>
-                        <div style="color: #a5b4fc;"><strong><i class="fa-solid fa-newspaper"></i> Activity Level:</strong> ${activity}</div>
+                        <div style="color: #f59e0b;"><strong><i class="fa-solid fa-certificate"></i> Certifications:</strong> ${certs}</div>
+                        <div style="color: var(--secondary);"><strong><i class="fa-solid fa-diagram-project"></i> Featured Projects:</strong> ${projects}</div>
+                        <div style="color: var(--primary);"><strong><i class="fa-solid fa-newspaper"></i> Activity Level:</strong> ${activity}</div>
                     </div>
                 </div>
 
@@ -675,9 +877,9 @@ function initForms() {
                         <div style="font-size: 18px; font-weight: 700; color: var(--secondary);">${rating}</div>
                     </div>
                 </div>
-                <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; font-size: 13px; line-height: 1.6;">
-                    <p style="margin-bottom: 8px; color: #6ee7b7;"><strong><i class="fa-solid fa-circle-check"></i> Strengths:</strong> ${strengths}</p>
-                    <p style="margin-bottom: 8px; color: #fca5a5;"><strong><i class="fa-solid fa-circle-exclamation"></i> Weaknesses:</strong> ${weaknesses}</p>
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; font-size: 13px; line-height: 1.6;">
+                    <p style="margin-bottom: 8px; color: #10b981;"><strong><i class="fa-solid fa-circle-check"></i> Strengths:</strong> ${strengths}</p>
+                    <p style="margin-bottom: 8px; color: #ef4444;"><strong><i class="fa-solid fa-circle-exclamation"></i> Weaknesses:</strong> ${weaknesses}</p>
                     <p style="color: var(--text-bright);"><strong><i class="fa-solid fa-lightbulb" style="color:var(--warning);"></i> Action Plan:</strong> ${tips}</p>
                 </div>
             `;
@@ -720,10 +922,10 @@ function initForms() {
 
             box.innerHTML = `
                 <div style="font-size: 11px; color: var(--accent); margin-bottom: 8px;">Evaluated via: ${data.source || 'Live GitHub API'}</div>
-                <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 15px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;">
+                <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 15px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px;">
                     ${metrics.avatar_url ? `<img src="${metrics.avatar_url}" style="width: 54px; height: 54px; border-radius: 50%; border: 2px solid var(--accent);">` : ''}
                     <div>
-                        <h3 style="color: #fff; margin-bottom: 2px;">${metrics.full_name || metrics.github_username}</h3>
+                        <h3 style="color: var(--text-bright); margin-bottom: 2px;">${metrics.full_name || metrics.github_username}</h3>
                         <div style="font-size: 13px; color: var(--text-muted);"><i class="fa-brands fa-github"></i> @${metrics.github_username}</div>
                         ${metrics.bio ? `<div style="font-size: 12px; color: var(--text-bright); margin-top: 4px;">"${metrics.bio}"</div>` : ''}
                     </div>
@@ -736,7 +938,7 @@ function initForms() {
                     </div>
                     <div>
                         <div style="font-size: 11px; color: var(--text-muted);">Code Grade</div>
-                        <div style="font-size: 24px; font-weight: 800; color: #6ee7b7;">${codeGrade}</div>
+                        <div style="font-size: 24px; font-weight: 800; color: #10b981;">${codeGrade}</div>
                     </div>
                     <div>
                         <div style="font-size: 11px; color: var(--text-muted);">Developer Tier</div>
@@ -745,24 +947,24 @@ function initForms() {
                 </div>
 
                 <div class="tag-list" style="margin-bottom: 14px;">
-                    <span class="tag" style="background: rgba(46,164,79,0.2); color:#6ee7b7;"><i class="fa-solid fa-code-fork"></i> Repos: ${metrics.public_repos}</span>
-                    <span class="tag" style="background: rgba(245,158,11,0.2); color:#fcd34d;"><i class="fa-solid fa-star"></i> Stars: ${metrics.total_stars}</span>
-                    <span class="tag" style="background: rgba(99,102,241,0.2); color:#a5b4fc;"><i class="fa-solid fa-users"></i> Followers: ${metrics.followers}</span>
-                    <span class="tag" style="background: rgba(6,182,212,0.2); color:#67e8f9;"><i class="fa-solid fa-fire"></i> Top Repo: ${metrics.top_repository}</span>
+                    <span class="tag" style="background: rgba(16, 185, 129, 0.15); color:#10b981;"><i class="fa-solid fa-code-fork"></i> Repos: ${metrics.public_repos}</span>
+                    <span class="tag" style="background: rgba(245, 158, 11, 0.15); color:#d97706;"><i class="fa-solid fa-star"></i> Stars: ${metrics.total_stars}</span>
+                    <span class="tag" style="background: rgba(99, 102, 241, 0.15); color:var(--primary);"><i class="fa-solid fa-users"></i> Followers: ${metrics.followers}</span>
+                    <span class="tag" style="background: rgba(2, 132, 199, 0.15); color:var(--secondary);"><i class="fa-solid fa-fire"></i> Top Repo: ${metrics.top_repository}</span>
                 </div>
 
                 ${topTechs.length ? `
                     <div style="margin-bottom: 12px;">
                         <span style="font-size: 12px; color: var(--text-muted);">Detected Technologies:</span>
                         <div class="tag-list" style="margin-top: 4px;">
-                            ${topTechs.map(t => `<span class="tag" style="background: rgba(255,255,255,0.06); color:#fff;">${t}</span>`).join('')}
+                            ${topTechs.map(t => `<span class="tag">${t}</span>`).join('')}
                         </div>
                     </div>
                 ` : ''}
 
-                <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; font-size: 13px; line-height: 1.6;">
-                    <p style="margin-bottom: 8px; color: #6ee7b7;"><strong><i class="fa-solid fa-circle-check"></i> Strengths:</strong> ${data.strengths}</p>
-                    <p style="margin-bottom: 8px; color: #fca5a5;"><strong><i class="fa-solid fa-circle-exclamation"></i> Gaps & Weaknesses:</strong> ${data.weaknesses}</p>
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; font-size: 13px; line-height: 1.6;">
+                    <p style="margin-bottom: 8px; color: #10b981;"><strong><i class="fa-solid fa-circle-check"></i> Strengths:</strong> ${data.strengths}</p>
+                    <p style="margin-bottom: 8px; color: #ef4444;"><strong><i class="fa-solid fa-circle-exclamation"></i> Gaps & Weaknesses:</strong> ${data.weaknesses}</p>
                     <p style="color: var(--text-bright);"><strong><i class="fa-solid fa-lightbulb" style="color:var(--warning);"></i> Actionable Growth Roadmap:</strong> ${data.improvement_suggestions}</p>
                 </div>
             `;

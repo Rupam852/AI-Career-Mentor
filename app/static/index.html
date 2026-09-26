@@ -25,6 +25,17 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Immediate theme initialization to prevent flash: default is light mode
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('theme') || 'light';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -39,7 +50,15 @@
                     <div style="font-size: 10px; color: var(--text-muted);">Hybrid ML & Advanced AI Intelligence</div>
                 </div>
             </div>
-            <button class="mobile-menu-btn" id="mobile-toggle-btn" aria-label="Toggle Menu"><i class="fa-solid fa-bars"></i></button>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <button class="theme-toggle-btn mobile-theme-btn" id="mobile-theme-toggle-btn" type="button" aria-label="Toggle Theme" title="Switch Theme">
+                    <span class="theme-icon-container">
+                        <i class="fa-solid fa-sun theme-sun-icon"></i>
+                        <i class="fa-solid fa-moon theme-moon-icon"></i>
+                    </span>
+                </button>
+                <button class="mobile-menu-btn" id="mobile-toggle-btn" aria-label="Toggle Menu"><i class="fa-solid fa-bars"></i></button>
+            </div>
         </div>
 
         <ul class="nav-menu">
@@ -64,6 +83,13 @@
                 <p>Powered by 1.6M ML Datasets & Advanced AI Models (Hybrid AI System)</p>
             </div>
             <div class="stats-bar">
+                <button class="theme-toggle-btn" id="theme-toggle-btn" type="button" aria-label="Toggle Light/Dark Theme" title="Toggle Light / Dark Mode">
+                    <span class="theme-icon-container">
+                        <i class="fa-solid fa-sun theme-sun-icon"></i>
+                        <i class="fa-solid fa-moon theme-moon-icon"></i>
+                    </span>
+                    <span class="theme-btn-label" id="theme-btn-label">Dark Mode</span>
+                </button>
                 <div class="stat-pill"><i class="fa-solid fa-database"></i> Datasets: <span>8 Modules</span></div>
                 <div class="stat-pill"><i class="fa-solid fa-robot"></i> Engine: <span style="color: var(--accent); font-weight:700;">Hybrid AI & ML Engine</span></div>
             </div>
@@ -80,17 +106,17 @@
                     <div class="card">
                         <div class="card-title"><i class="fa-solid fa-fire" style="color: var(--warning);"></i> Top High-Paying Roles (INR & USD)</div>
                         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: rgba(255,255,255,0.02); border-radius: 8px;">
-                                <div><strong style="color:#fff; font-size: 13px;">AI / ML Architect</strong><div style="font-size:11px; color:var(--text-muted);">Deep Learning & GenAI</div></div>
-                                <div style="text-align:right;"><span style="color:#6ee7b7; font-weight:700; font-size:14px;">₹34.5 - ₹58.0 L</span><div style="font-size:11px; color:var(--secondary);">$42k - $70k/yr</div></div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--result-bg); border: 1px solid var(--border-color); border-radius: 8px;">
+                                <div><strong style="color:var(--text-bright); font-size: 13px;">AI / ML Architect</strong><div style="font-size:11px; color:var(--text-muted);">Deep Learning & GenAI</div></div>
+                                <div style="text-align:right;"><span style="color:#10b981; font-weight:700; font-size:14px;">₹34.5 - ₹58.0 L</span><div style="font-size:11px; color:var(--secondary);">$42k - $70k/yr</div></div>
                             </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: rgba(255,255,255,0.02); border-radius: 8px;">
-                                <div><strong style="color:#fff; font-size: 13px;">MLOps Engineer</strong><div style="font-size:11px; color:var(--text-muted);">Docker, Kubernetes, CI/CD</div></div>
-                                <div style="text-align:right;"><span style="color:#6ee7b7; font-weight:700; font-size:14px;">₹24.0 - ₹42.0 L</span><div style="font-size:11px; color:var(--secondary);">$29k - $51k/yr</div></div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--result-bg); border: 1px solid var(--border-color); border-radius: 8px;">
+                                <div><strong style="color:var(--text-bright); font-size: 13px;">MLOps Engineer</strong><div style="font-size:11px; color:var(--text-muted);">Docker, Kubernetes, CI/CD</div></div>
+                                <div style="text-align:right;"><span style="color:#10b981; font-weight:700; font-size:14px;">₹24.0 - ₹42.0 L</span><div style="font-size:11px; color:var(--secondary);">$29k - $51k/yr</div></div>
                             </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: rgba(255,255,255,0.02); border-radius: 8px;">
-                                <div><strong style="color:#fff; font-size: 13px;">Full Stack Engineer</strong><div style="font-size:11px; color:var(--text-muted);">FastAPI, React, Cloud APIs</div></div>
-                                <div style="text-align:right;"><span style="color:#6ee7b7; font-weight:700; font-size:14px;">₹20.0 - ₹36.0 L</span><div style="font-size:11px; color:var(--secondary);">$24k - $44k/yr</div></div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--result-bg); border: 1px solid var(--border-color); border-radius: 8px;">
+                                <div><strong style="color:var(--text-bright); font-size: 13px;">Full Stack Engineer</strong><div style="font-size:11px; color:var(--text-muted);">FastAPI, React, Cloud APIs</div></div>
+                                <div style="text-align:right;"><span style="color:#10b981; font-weight:700; font-size:14px;">₹20.0 - ₹36.0 L</span><div style="font-size:11px; color:var(--secondary);">$24k - $44k/yr</div></div>
                             </div>
                         </div>
                     </div>
@@ -98,41 +124,41 @@
                     <div class="card">
                         <div class="card-title"><i class="fa-solid fa-chart-line" style="color: var(--secondary);"></i> Trending Tech Skills (2026 Demand)</div>
                         <div class="tag-list" style="margin-top: 10px; gap: 10px;">
-                            <span class="tag" style="padding: 6px 12px; font-size: 13px;"><i class="fa-solid fa-arrow-trend-up" style="color:#6ee7b7;"></i> Python 3.12 (+48%)</span>
-                            <span class="tag" style="padding: 6px 12px; font-size: 13px;"><i class="fa-solid fa-arrow-trend-up" style="color:#6ee7b7;"></i> FastAPI & REST (+42%)</span>
-                            <span class="tag" style="padding: 6px 12px; font-size: 13px;"><i class="fa-solid fa-arrow-trend-up" style="color:#6ee7b7;"></i> PyTorch & LLMs (+55%)</span>
-                            <span class="tag" style="padding: 6px 12px; font-size: 13px;"><i class="fa-solid fa-arrow-trend-up" style="color:#6ee7b7;"></i> Docker & Cloud (+36%)</span>
-                            <span class="tag" style="padding: 6px 12px; font-size: 13px;"><i class="fa-solid fa-arrow-trend-up" style="color:#6ee7b7;"></i> React & Next.js (+34%)</span>
-                            <span class="tag" style="padding: 6px 12px; font-size: 13px;"><i class="fa-solid fa-arrow-trend-up" style="color:#6ee7b7;"></i> SQL & BigQuery (+29%)</span>
+                            <span class="tag" style="padding: 6px 12px; font-size: 13px;"><i class="fa-solid fa-arrow-trend-up" style="color:var(--accent);"></i> Python 3.12 (+48%)</span>
+                            <span class="tag" style="padding: 6px 12px; font-size: 13px;"><i class="fa-solid fa-arrow-trend-up" style="color:var(--accent);"></i> FastAPI & REST (+42%)</span>
+                            <span class="tag" style="padding: 6px 12px; font-size: 13px;"><i class="fa-solid fa-arrow-trend-up" style="color:var(--accent);"></i> PyTorch & LLMs (+55%)</span>
+                            <span class="tag" style="padding: 6px 12px; font-size: 13px;"><i class="fa-solid fa-arrow-trend-up" style="color:var(--accent);"></i> Docker & Cloud (+36%)</span>
+                            <span class="tag" style="padding: 6px 12px; font-size: 13px;"><i class="fa-solid fa-arrow-trend-up" style="color:var(--accent);"></i> React & Next.js (+34%)</span>
+                            <span class="tag" style="padding: 6px 12px; font-size: 13px;"><i class="fa-solid fa-arrow-trend-up" style="color:var(--accent);"></i> SQL & BigQuery (+29%)</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Launchpad Shortcuts -->
                 <div style="margin-bottom: 20px;">
-                    <h4 style="color:#fff; margin-bottom: 12px;"><i class="fa-solid fa-rocket" style="color: var(--accent);"></i> Quick Launchpad Tools</h4>
+                    <h4 style="color:var(--text-bright); margin-bottom: 12px;"><i class="fa-solid fa-rocket" style="color: var(--accent);"></i> Quick Launchpad Tools</h4>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
                         <div class="card" style="cursor: pointer; transition: transform 0.2s;" onclick="document.querySelector('[data-tab=resume]').click();">
                             <div style="font-size: 24px; color: var(--primary); margin-bottom: 8px;"><i class="fa-solid fa-file-invoice"></i></div>
-                            <h4 style="color:#fff; font-size: 14px;">Resume ATS & Upload</h4>
+                            <h4 style="color:var(--text-bright); font-size: 14px;">Resume ATS & Upload</h4>
                             <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Parse PDF/DOCX resumes and get instant ATS evaluation.</p>
                         </div>
 
                         <div class="card" style="cursor: pointer; transition: transform 0.2s;" onclick="document.querySelector('[data-tab=interview]').click();">
                             <div style="font-size: 24px; color: var(--secondary); margin-bottom: 8px;"><i class="fa-solid fa-comments"></i></div>
-                            <h4 style="color:#fff; font-size: 14px;">AI Mock Interview</h4>
+                            <h4 style="color:var(--text-bright); font-size: 14px;">AI Mock Interview</h4>
                             <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Practice interview questions and get scored out of 10.</p>
                         </div>
 
                         <div class="card" style="cursor: pointer; transition: transform 0.2s;" onclick="document.querySelector('[data-tab=github]').click();">
                             <div style="font-size: 24px; color: var(--accent); margin-bottom: 8px;"><i class="fa-brands fa-github"></i></div>
-                            <h4 style="color:#fff; font-size: 14px;">Live GitHub Audit</h4>
+                            <h4 style="color:var(--text-bright); font-size: 14px;">Live GitHub Audit</h4>
                             <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Audit repositories, code quality grade, and developer tier.</p>
                         </div>
 
                         <div class="card" style="cursor: pointer; transition: transform 0.2s;" onclick="document.querySelector('[data-tab=roadmap]').click();">
                             <div style="font-size: 24px; color: var(--warning); margin-bottom: 8px;"><i class="fa-solid fa-route"></i></div>
-                            <h4 style="color:#fff; font-size: 14px;">Career Roadmap</h4>
+                            <h4 style="color:var(--text-bright); font-size: 14px;">Career Roadmap</h4>
                             <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Get multi-phase learning roadmaps, courses, and project ideas.</p>
                         </div>
                     </div>
@@ -311,7 +337,7 @@
                         <!-- File Upload Dropzone -->
                         <div class="dropzone" id="resume-dropzone">
                             <i class="fa-solid fa-cloud-arrow-up"></i>
-                            <div style="font-size: 14px; font-weight: 600; color: #fff;">Click or Drag Resume File (.pdf, .docx, .txt)</div>
+                            <div style="font-size: 14px; font-weight: 600; color: var(--text-bright);">Click or Drag Resume File (.pdf, .docx, .txt)</div>
                             <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Automatic text extraction</div>
                             <input type="file" id="resume-file-input" accept=".pdf,.docx,.doc,.txt" style="display: none;">
                         </div>
@@ -462,6 +488,57 @@
             </div>
 
         </main>
+    </div>
+
+    <!-- Backend Cloud Server Wake-Up & Health Modal -->
+    <div id="server-status-modal" class="server-modal-backdrop" style="display: none;">
+        <div class="server-modal-card">
+            <!-- Close Button (X) -->
+            <button id="server-modal-close-btn" class="server-modal-close" aria-label="Close Modal" onclick="closeServerModal()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Loading / Waking Up State -->
+            <div id="server-state-loading" class="server-modal-state">
+                <div class="server-spinner-ring">
+                    <div class="server-spinner-pulse"></div>
+                    <i class="fa-solid fa-cloud-arrow-up server-spinner-icon"></i>
+                </div>
+                <h3 class="server-modal-title">Waking Up AI Cloud Server...</h3>
+                <p class="server-modal-desc">
+                    Hamara cloud backend sleep mode se activate ho raha hai (Render free-tier cold start). Isme aam taur par <strong>~30 se 45 seconds</strong> lagte hain.
+                </p>
+                <div class="server-status-tracker">
+                    <span class="server-live-dot pulse"></span>
+                    <span id="server-attempt-text">Pinging backend server... (Attempt 1)</span>
+                </div>
+                <div class="server-progress-bar">
+                    <div id="server-progress-fill" class="server-progress-fill"></div>
+                </div>
+                <button type="button" class="server-btn-subtle" onclick="closeServerModal()">
+                    Explore Dashboard in Background <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <!-- Success / Ready State -->
+            <div id="server-state-ready" class="server-modal-state" style="display: none;">
+                <div class="server-success-ring">
+                    <i class="fa-solid fa-circle-check server-success-icon"></i>
+                </div>
+                <h3 class="server-modal-title" style="color: #6ee7b7;">Backend Server Ready to Use! 🎉</h3>
+                <p class="server-modal-desc">
+                    Backend cloud server successfully wake up ho chuka hai aur 100% active hai. Ab aap Resumes, Salary Predictor, GitHub Audit aur AI Mock Interview seamlessly use kar sakte hain.
+                </p>
+                <div class="server-ready-badges">
+                    <span class="server-pill-badge"><i class="fa-solid fa-bolt" style="color: #38bdf8;"></i> Fast Responses</span>
+                    <span class="server-pill-badge"><i class="fa-solid fa-brain" style="color: #c084fc;"></i> 8 ML Models Active</span>
+                    <span class="server-pill-badge"><i class="fa-solid fa-shield-halved" style="color: #34d399;"></i> 1.6M Datasets Live</span>
+                </div>
+                <button type="button" id="server-modal-ok-btn" class="server-btn-success" onclick="closeServerModal()">
+                    <i class="fa-solid fa-rocket"></i> OK, Let's Start!
+                </button>
+            </div>
+        </div>
     </div>
 
     <script src="/static/app.js"></script>
